@@ -1,0 +1,71 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.cards (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userid uuid,
+  studentid text NOT NULL,
+  firstname text NOT NULL,
+  lastname text NOT NULL,
+  department text NOT NULL,
+  program text NOT NULL,
+  avatar text,
+  issueddate timestamp with time zone NOT NULL,
+  expirydate timestamp with time zone NOT NULL,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])),
+  qrcode text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT cards_pkey PRIMARY KEY (id),
+  CONSTRAINT cards_userid_fkey FOREIGN KEY (userid) REFERENCES public.users(id)
+);
+CREATE TABLE public.departments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  code text NOT NULL UNIQUE,
+  programs ARRAY DEFAULT '{}'::text[],
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT departments_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userid uuid,
+  title text NOT NULL,
+  message text NOT NULL,
+  type text NOT NULL DEFAULT 'info'::text CHECK (type = ANY (ARRAY['info'::text, 'warning'::text, 'error'::text, 'success'::text])),
+  read boolean DEFAULT false,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT notifications_userid_fkey FOREIGN KEY (userid) REFERENCES public.users(id)
+);
+CREATE TABLE public.payments (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userid uuid,
+  cardid uuid,
+  amount numeric NOT NULL,
+  description text NOT NULL,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])),
+  paymentmethod text,
+  transactionid text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT payments_pkey PRIMARY KEY (id),
+  CONSTRAINT payments_userid_fkey FOREIGN KEY (userid) REFERENCES public.users(id),
+  CONSTRAINT payments_cardid_fkey FOREIGN KEY (cardid) REFERENCES public.cards(id)
+);
+CREATE TABLE public.users (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  email text NOT NULL UNIQUE,
+  role text NOT NULL DEFAULT 'student'::text CHECK (role = ANY (ARRAY['student'::text, 'admin'::text])),
+  firstname text NOT NULL,
+  lastname text NOT NULL,
+  studentid text,
+  department text,
+  program text,
+  avatar text,
+  phone text,
+  dateofbirth date,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT users_pkey PRIMARY KEY (id)
+);
