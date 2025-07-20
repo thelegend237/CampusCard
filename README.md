@@ -15,12 +15,14 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
 - **Support et gestion du profil**
 
 ### Pour les administrateurs
+- **Back office totalement indépendant du front office** (layout, navigation, sécurité)
 - **Tableau de bord global** (statistiques, activité récente)
-- **Gestion des étudiants** (liste, suppression)
+- **Gestion des étudiants** (liste, suppression, recherche)
 - **Gestion des cartes** (validation, émission, statut)
 - **Gestion des paiements** (validation, suivi, historique)
 - **Gestion des départements et programmes**
-- **Rapports et export**
+- **Rapports et export PDF**
+- **Paramétrage avancé (policies, sécurité, notifications)**
 
 ## Architecture du projet
 
@@ -28,11 +30,12 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
 ├── src/
 │   ├── App.tsx                # Point d'entrée principal, routes et protections
 │   ├── main.tsx               # Bootstrap React
-│   ├── components/            # Composants réutilisables (Layout, etc.)
+│   ├── components/            # Composants réutilisables (Layout, AdminRoute, etc.)
 │   ├── contexts/              # Contextes globaux (authentification)
 │   ├── lib/                   # Configuration Supabase
 │   ├── pages/                 # Pages principales (étudiant, admin, login, accueil)
 │   │   └── student/           # Pages étudiantes (Dashboard, CardGeneration, StudentCardView...)
+│   │   └── admin/             # Pages admin (Dashboard, Students, Cards, Payments...)
 │   ├── types/                 # Définition des types TypeScript (User, Card, Payment...)
 │   ├── utils/                 # Fonctions utilitaires (génération PDF, etc.)
 │   └── index.css, vite-env.d.ts
@@ -67,12 +70,26 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
 - `/admin` : Tableau de bord admin (routes protégées, accès admin uniquement)
   - `/admin/dashboard`, `/admin/students`, `/admin/cards`, ...
 
-## Logique d'accès et sécurité
-- **Routes protégées** via le composant `ProtectedRoute` (redirige si non connecté ou non admin)
+## Séparation stricte back office / front office
+- **Le back office admin est totalement séparé du front office étudiant** (layout, navigation, policies, dépendances).
+- **Protection des routes admin** via le composant `AdminRoute` (seuls les utilisateurs avec le rôle `admin` peuvent accéder à `/admin/*`).
+- **Layout admin dédié** (`AdminLayout.tsx`) avec menu, header, couleurs et navigation propres à l'admin.
+- **Aucune page admin n'est accessible ou importée côté front office.**
+
+## Sécurité et policies Supabase
+- **RLS (Row Level Security) activé** sur toutes les tables sensibles.
 - **Policies Supabase** :
-  - Les étudiants ne voient que leurs propres cartes/paiements (`auth.uid() = userid`)
-  - Les admins peuvent voir toutes les données
+  - Les étudiants ne voient que leurs propres données (`auth.uid() = userid`)
+  - Les admins peuvent voir toutes les données (policy spécifique sur chaque table, sans récursion sur `users`)
+  - Voir le dossier `supabase/scheme.txt` et le script SQL fourni pour la gestion des policies.
 - **Stockage sécurisé des photos** via Supabase Storage (bucket `avatar`)
+- **Gestion des rôles** : le champ `role` dans la table `users` (`student` ou `admin`)
+
+## Gestion des erreurs courantes
+- **Erreur de récursion infinie sur policies** : ne jamais faire de sous-requête sur `users` dans une policy sur la table `users`.
+- **Accès admin** : pour voir tous les utilisateurs, il faut une policy SELECT permissive ou utiliser le rôle dans le JWT.
+- **Accès refusé** : vérifier que le rôle de l'utilisateur est bien `admin` dans la table `users`.
+- **Connexion Supabase** : vérifier que le projet est actif et que les clés/URL sont correctes.
 
 ## Modèles de données principaux (extraits réels)
 
@@ -115,11 +132,13 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
 - **Aucune donnée sensible n'est exposée sans authentification**
 - **Bucket Storage privé** (policies adaptées)
 - **Validation des rôles côté client ET côté BDD**
+- **Séparation stricte du code et des layouts admin/front**
 
 ## Prise en main rapide
 - Cloner le repo, installer les dépendances, configurer `.env` avec les clés Supabase
 - Lancer le serveur avec `npm run dev`
 - Créer un utilisateur admin dans la table `users` pour accéder à l'admin
+- Appliquer les policies SQL fournies dans le dossier `supabase/`
 - Tester le flux complet étudiant/admin
 
 ## Contribution
