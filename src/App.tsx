@@ -17,6 +17,7 @@ import AdminPayments from './pages/admin/AdminPayments';
 import AdminDepartments from './pages/admin/AdminDepartments';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminLayout from './components/AdminLayout';
 import AdminRoute from './components/AdminRoute';
 import StudentCardView from './pages/student/StudentCardView';
 
@@ -73,7 +74,7 @@ function App() {
             {/* Admin Routes protégées par AdminRoute */}
             <Route path="/admin/*" element={
               <AdminRoute>
-                <DashboardLayout />
+                <AdminLayout />
               </AdminRoute>
             }>
               <Route path="dashboard" element={<AdminDashboard />} />

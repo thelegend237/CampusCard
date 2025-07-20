@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, DollarSign, Building, FileText, Settings, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -13,7 +13,7 @@ const adminNavItems = [
   { path: '/admin/settings', label: 'Paramètres', icon: Settings },
 ];
 
-const AdminLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
 
@@ -29,7 +29,7 @@ const AdminLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => 
         <div>
           <div className="p-6 flex items-center space-x-2 mb-8">
             <div className="w-12 h-12 flex items-center justify-center">
-              <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
+              <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain" />
             </div>
             <span className="text-xl font-bold text-white">CampusCard Admin</span>
           </div>
@@ -71,7 +71,7 @@ const AdminLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => 
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-8 bg-gradient-to-br from-blue-50 via-white to-blue-100">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>
