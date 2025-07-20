@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Users, CreditCard, DollarSign, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 
+
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState({
     totalStudents: 0,
@@ -47,6 +48,16 @@ const AdminDashboard: React.FC = () => {
         approvedPayments: payments.filter(p => p.status === 'approved').length,
         revenue: totalRevenue
       });
+
+      function getRelativeTime(dateString) {
+        const now = new Date();
+        const date = new Date(dateString);
+        const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+        if (diff < 60) return `il y a ${diff} sec.`;
+        if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min.`;
+        if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
+        return date.toLocaleDateString('fr-FR');
+      }
 
       // Récupération des activités récentes réelles (cartes et paiements)
       const recentCards = cards

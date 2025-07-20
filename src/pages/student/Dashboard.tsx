@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { Card, Payment } from '../../types';
 import { Bell, Calendar, MapPin, Clock } from 'lucide-react';
 import { generateCardPDF } from '../../utils/pdfGenerator';
+import StudentCardDisplay from '../../components/StudentCardDisplay';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -21,17 +22,17 @@ const Dashboard: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+  const fetchUserData = async () => {
       if (!user) {
         console.log('Aucun utilisateur connecté');
         return;
       }
-      try {
+    try {
         console.log('Utilisateur connecté :', user);
-        // Fetch user's card
+      // Fetch user's card
         const { data: cardDataArr, error: cardError } = await supabase
-          .from('cards')
-          .select('*')
+        .from('cards')
+        .select('*')
           .eq('userid', user.id)
           .order('created_at', { ascending: false })
           .limit(1);
@@ -40,18 +41,18 @@ const Dashboard: React.FC = () => {
           console.error('Erreur requête carte :', cardError);
         }
         console.log('Réponse carte (cardData) :', cardData);
-        // Fetch user's payments
+      // Fetch user's payments
         const { data: paymentData, error: paymentError } = await supabase
-          .from('payments')
-          .select('*')
+        .from('payments')
+        .select('*')
           .eq('userid', user.id)
           .order('created_at', { ascending: false });
         if (paymentError) {
           console.error('Erreur requête paiements :', paymentError);
         }
         console.log('Réponse paiements (paymentData) :', paymentData);
-        setCard(cardData);
-        setPayments(paymentData || []);
+      setCard(cardData);
+      setPayments(paymentData || []);
         console.log('card (state) :', cardData);
         console.log('payments (state) :', paymentData);
         if (paymentData && paymentData.length > 0) {
@@ -59,10 +60,10 @@ const Dashboard: React.FC = () => {
         }
       } catch (err) {
         console.error('Erreur fetchUserData :', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
     fetchUserData();
   }, [user]);
 
@@ -206,50 +207,46 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Votre carte d'étudiant</h2>
             <div className="flex space-x-2">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                onClick={() => window.location.href = '/settings'}
+                title="Accéder aux paramètres de votre compte"
+              >
                 Paramètres
               </button>
-              <button className="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors">
+              <button
+                className="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-600 transition-colors"
+                onClick={() => window.location.href = '/history'}
+                title="Voir l'historique de vos cartes"
+              >
                 Historique
+              </button>
+              <button
+                className="bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-800 transition-colors"
+                onClick={() => window.location.href = '/student/card-view?mode=pdf'}
+                title="Afficher la carte exactement comme dans le PDF"
+              >
+                Aperçu PDF
               </button>
             </div>
           </div>
 
           {card ? (
             <div>
-              {/* Affiche la carte */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white mb-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold">IUT de Douala</h3>
-                  <span className="text-sm">ID: #{card.studentid}</span>
-                </div>
-                <p className="text-sm mb-2">Carte d'étudiant 2025-2026</p>
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                    {card.avatar ? (
-                      <img src={card.avatar} alt="Avatar" className="w-16 h-16 object-cover" />
-                    ) : (
-                      <span className="text-2xl">👤</span>
-                    )}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg">{card.firstname} {card.lastname}</h4>
-                    <p className="text-sm opacity-90">{card.program}</p>
-                    <p className="text-xs opacity-75">Né le: {user?.dateofbirth || ''}</p>
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="text-xs">
-                    <p>Valide jusqu'au: {card.expirydate ? new Date(card.expirydate).toLocaleDateString('fr-FR') : ''}</p>
-                  </div>
-                  <div className="bg-white/20 rounded p-2">
-                    <div className="w-8 h-8 bg-white/30 rounded"></div>
-                  </div>
-                </div>
-              </div>
+              <StudentCardDisplay
+                studentid={card.studentid}
+                firstname={card.firstname}
+                lastname={card.lastname}
+                dateofbirth={user?.dateofbirth || ''}
+                placeofbirth={user?.placeofbirth || ''}
+                program={card.program}
+                department={card.department}
+                avatar={card.avatar}
+                showQr={true}
+              />
               <button
                 onClick={() => generateCardPDF(card)}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors mt-4"
               >
                 Télécharger en PDF
               </button>

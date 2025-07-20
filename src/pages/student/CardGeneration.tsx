@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Upload, Eye, CreditCard } from 'lucide-react';
+// import { Upload, Eye, CreditCard } from 'lucide-react';
 import PaymentForm from './PaymentForm';
+import StudentCardDisplay from '../../components/StudentCardDisplay';
 
 const CardGeneration: React.FC = () => {
   const { user } = useAuth();
@@ -13,14 +14,85 @@ const CardGeneration: React.FC = () => {
     department: user?.department || '',
     program: user?.program || '',
     avatar: '',
+    dateofbirth: '',
+    placeofbirth: '',
+    versoMessage: '',
+    emergencyContact: '',
   });
   
-  const [currentStep, setCurrentStep] = useState(1);
-  const [showPreview, setShowPreview] = useState(false);
+  // const [currentStep, setCurrentStep] = useState(1);
+  // const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [showPaymentButton, setShowPaymentButton] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [isBackPreview, setIsBackPreview] = useState(false);
+
+  // Dynamique : récupération du paiement et de la carte
+  // Typage explicite pour éviter never
+  interface CardType {
+    status?: string;
+    created_at?: string;
+    issueddate?: string;
+  }
+  interface PaymentType {
+    status?: string;
+    updated_at?: string;
+  }
+  const [card, setCard] = useState<CardType | null>(null);
+  const [payment, setPayment] = useState<PaymentType | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    const fetchData = async () => {
+      // Paiement
+      const { data: paymentData } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('userid', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      setPayment(paymentData);
+      // Carte
+      const { data: cardData } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('userid', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      setCard(cardData);
+    };
+    fetchData();
+  }, [user]);
+
+  // Construction dynamique des étapes
+  const steps = [
+    {
+      label: 'Paiement',
+      status: payment?.status === 'success' || payment?.status === 'approved' ? 'done' : payment?.status === 'pending' ? 'in_progress' : 'pending',
+      date: payment?.updated_at,
+      description: payment?.status === 'success' || payment?.status === 'approved' ? 'Paiement validé' : 'En attente de paiement',
+    },
+    {
+      label: 'Génération de la carte',
+      status: card?.status === 'pending' && (payment?.status === 'success' || payment?.status === 'approved') ? 'in_progress' : card?.status === 'approved' ? 'done' : 'pending',
+      date: card?.created_at,
+      description: card?.status === 'pending' ? 'En cours' : '',
+    },
+    {
+      label: 'Validation',
+      status: card?.status === 'approved' ? 'done' : 'pending',
+      date: card?.issueddate,
+      description: card?.status === 'approved' ? 'Carte validée' : 'En attente de validation',
+    },
+    {
+      label: 'Finalisation',
+      status: card?.status === 'approved' ? 'done' : 'pending',
+      date: card?.issueddate,
+      description: card?.status === 'approved' ? 'Carte disponible' : 'En attente',
+    },
+  ];
 
   useEffect(() => {
     const fetchPaymentStatus = async () => {
@@ -89,6 +161,8 @@ const CardGeneration: React.FC = () => {
             department: formData.department,
             program: formData.program,
             avatar: formData.avatar,
+            dateofbirth: formData.dateofbirth,
+            placeofbirth: formData.placeofbirth,
             issueddate: new Date().toISOString(),
             expirydate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
             status: 'pending',
@@ -104,29 +178,7 @@ const CardGeneration: React.FC = () => {
     }
   };
 
-  const handlePayment = async () => {
-    try {
-      // Create payment record
-      const { error } = await supabase
-        .from('payments')
-        .insert([
-          {
-            userid: user?.id,
-            amount: 5000,
-            description: 'Frais de carte étudiant',
-            status: 'pending',
-            created_at: new Date().toISOString(),
-          },
-        ]);
-
-      if (error) throw error;
-      
-      // Redirect to payment page
-      window.location.href = '/payment-status';
-    } catch (error) {
-      console.error('Error creating payment:', error);
-    }
-  };
+  // Fonction handlePayment supprimée car inutilisée
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -193,7 +245,9 @@ const CardGeneration: React.FC = () => {
               </div>
             </div>
 
-            {/* Personal Info */}
+            {!isBackPreview ? (
+              <>
+                {/* Formulaire recto (infos classiques) */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -201,11 +255,11 @@ const CardGeneration: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  name="firstName"
+                      name="firstname"
                   value={formData.firstname}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="test2"
+                      placeholder="Prénom"
                 />
               </div>
               <div>
@@ -214,29 +268,55 @@ const CardGeneration: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  name="lastName"
+                      name="lastname"
                   value={formData.lastname}
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="2"
+                      placeholder="Nom"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Date de naissance
+                    </label>
+                    <input
+                      type="date"
+                      name="dateofbirth"
+                      value={formData.dateofbirth}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="JJ/MM/AAAA"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Lieu de naissance
+                    </label>
+                    <input
+                      type="text"
+                      name="placeofbirth"
+                      value={formData.placeofbirth}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Ville, pays..."
                 />
               </div>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Numéro étudiant
               </label>
               <input
                 type="text"
-                name="studentId"
+                    name="studentid"
                 value={formData.studentid}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="2101206"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Département
@@ -246,6 +326,7 @@ const CardGeneration: React.FC = () => {
                 value={formData.department}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Département"
               >
                 <option value="">Sélectionnez un département</option>
                 <option value="Informatique & Réseaux">Informatique & Réseaux</option>
@@ -254,7 +335,6 @@ const CardGeneration: React.FC = () => {
                 <option value="Maintenance Industrielle">Maintenance Industrielle</option>
               </select>
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Programme d'études
@@ -264,6 +344,7 @@ const CardGeneration: React.FC = () => {
                 value={formData.program}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Programme d'études"
               >
                 <option value="">Sélectionnez un programme</option>
                 <option value="Master en Informatique">Master en Informatique</option>
@@ -272,7 +353,37 @@ const CardGeneration: React.FC = () => {
                 <option value="BTS Maintenance">BTS Maintenance</option>
               </select>
             </div>
-
+              </>
+            ) : (
+              <>
+                {/* Formulaire verso (personnalisation) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Message personnalisé (ex: instructions en cas de perte)
+                  </label>
+                  <textarea
+                    name="versoMessage"
+                    value={formData.versoMessage}
+                    onChange={e => setFormData(prev => ({ ...prev, versoMessage: e.target.value }))}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Si vous trouvez cette carte, merci de contacter le propriétaire ou l'administration de l'IUT de Douala."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Contact d'urgence (optionnel)
+                  </label>
+                  <input
+                    type="text"
+                    name="emergencyContact"
+                    value={formData.emergencyContact}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Téléphone ou email"
+                  />
+                </div>
+              </>
+            )}
             {!showPaymentButton && !showPaymentForm && (
               <button
                 type="submit"
@@ -303,98 +414,74 @@ const CardGeneration: React.FC = () => {
           <div className="bg-gray-800 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">Aperçu de votre carte</h2>
-              <button className="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                🔄 Retourner la carte
+              <button
+                className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                onClick={() => setIsBackPreview((prev) => !prev)}
+                type="button"
+              >
+                🔄 {isBackPreview ? 'Voir le recto' : 'Retourner la carte'}
               </button>
             </div>
 
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-sm">IUT</span>
+            <div className="rounded-xl p-6 text-white relative center" style={{ minHeight: 260 }}>
+              {!isBackPreview ? (
+                <StudentCardDisplay
+                  studentid={formData.studentid}
+                  firstname={formData.firstname}
+                  lastname={formData.lastname}
+                  dateofbirth={formData.dateofbirth}
+                  placeofbirth={formData.placeofbirth}
+                  program={formData.program}
+                  department={formData.department}
+                  avatar={formData.avatar}
+                  showQr={true}
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col justify-between" style={{ minHeight: 260 }}>
+                  <div>
+                    <h3 className="text-lg font-bold mb-2">En cas de perte</h3>
+                    <p className="text-sm">Nom : {formData.lastname}</p>
+                    <p className="text-sm">Prénom : {formData.firstname}</p>
+                    <p className="text-sm">ID étudiant : {formData.studentid}</p>
+                    {formData.department && <p className="text-sm">Département : {formData.department}</p>}
+                    {formData.program && <p className="text-sm">Filière : {formData.program}</p>}
+                    {formData.emergencyContact && (
+                      <p className="text-sm font-semibold mt-2">Contact d'urgence : {formData.emergencyContact}</p>
+                    )}
                   </div>
-                  <span className="font-bold">CampusCard</span>
+                  <div className="text-xs text-gray-200 mt-4">
+                    <p>{formData.versoMessage || "Si vous trouvez cette carte, merci de contacter le propriétaire ou l'administration de l'IUT de Douala."}</p>
+                    <p className="mt-2">CampusCard - IUT de Douala</p>
+                  </div>
                 </div>
-                <span className="text-sm">2025-2026</span>
-              </div>
-
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-                  {formData.avatar ? (
-                    <img src={formData.avatar} alt="Avatar" className="w-20 h-20 object-cover rounded-lg" />
-                  ) : (
-                  <span className="text-4xl">👤</span>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">{formData.firstname} {formData.lastname}</h3>
-                  <p className="text-sm opacity-90">{formData.program}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="opacity-75">ID: {formData.studentid}</p>
-                  <p className="opacity-75">Date d'émission: {new Date().toLocaleDateString('fr-FR')}</p>
-                </div>
-                <div>
-                  <p className="opacity-75">Date d'expiration: {new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('fr-FR')}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 flex justify-end">
-                <div className="w-12 h-12 bg-white/20 rounded flex items-center justify-center">
-                  <div className="w-8 h-8 bg-white/30 rounded"></div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 
-          {/* Process Status */}
+          {/* Process Status dynamique */}
           <div className="bg-gray-800 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-white mb-4">État du processus</h3>
-            
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">✓</span>
+              {steps.map((step, idx) => (
+                <div key={idx} className="flex items-center space-x-3">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step.status === 'done' ? 'bg-green-500' :
+                    step.status === 'in_progress' ? 'bg-blue-500' : 'bg-gray-600'
+                  }`}>
+                    <span className="text-white text-sm">
+                      {step.status === 'done' ? '✓' : idx + 1}
+                    </span>
+                  </div>
+                  <div>
+                    <p className={`font-medium ${step.status === 'done' || step.status === 'in_progress' ? 'text-white' : 'text-gray-400'}`}>
+                      {step.description}
+                    </p>
+                    {step.date && (
+                      <p className="text-sm text-gray-400">{new Date(step.date).toLocaleString()}</p>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-white">Paiement validé</p>
-                  <p className="text-sm text-gray-400">09/06/2025 à 10:23</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">2</span>
-                </div>
-                <div>
-                  <p className="font-medium text-white">En cours</p>
-                  <p className="text-sm text-gray-400">Génération de la carte</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">3</span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-400">En attente de validation</p>
-                  <p className="text-sm text-gray-500">Prochaine étape</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">4</span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-400">Prévue le 12/06/2025</p>
-                  <p className="text-sm text-gray-500">Finalisation</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 

@@ -1,95 +1,69 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
 import { Card } from '../types';
 
 export const generateCardPDF = async (card: Card): Promise<void> => {
   try {
+    // Les images doivent être publiques et accessibles en CORS !
+    // Mets le logo officiel dans /public/logo-iut.png
+    const logoUrl1 = '/logo-iut.png';
+    const logoUrl2 = '/logo-iut2.png';
+    // Génère le QR code (par exemple, encode le matricule ou l'URL de vérification)
+    const qrDataUrl = await QRCode.toDataURL(card.studentid || 'CampusCard');
+
     // Create a temporary card element for PDF generation
     const tempElement = document.createElement('div');
     tempElement.innerHTML = `
       <div style="
         width: 420px;
         height: 260px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 15px;
-        padding: 20px;
-        color: white;
-        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #f8fafc 60%, #e3eafc 100%);
+        border-radius: 18px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+        border: 1.5px solid #003366;
+        padding: 0;
+        color: #1a202c;
+        font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
         position: relative;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
       ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-          <div style="display: flex; align-items: center;">
-            <div style="
-              width: 40px;
-              height: 40px;
-              background: white;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              margin-right: 10px;
-            ">
-              <span style="color: #667eea; font-weight: bold; font-size: 14px;">IUT</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 6px 16px; background: #fff; border-bottom: 1px solid #e3eafc;">
+          <img src="${logoUrl1}" alt="Logo" style="height: 38px;" crossorigin="anonymous" />
+          <div style="text-align: center; flex: 1;">
+            <div style="font-weight: bold; font-size: 15px; letter-spacing: 0.5px;">UNIVERSITE DE DOUALA</div>
+            <div style="font-size: 12px; margin-top: 1px;">INSTITUT UNIVERSITAIRE DE TECHNOLOGIE</div>
+            <div style="font-size: 10px; color: #2563eb; margin-top: 1px;">CARTE D'ETUDIANT - ${new Date().getFullYear()}/${new Date().getFullYear() + 1}</div>
+          </div>
+          <img src="${logoUrl2}" alt="Logo" style="height: 38px;" crossorigin="anonymous" />
+        </div>
+        <div style="display: flex; flex: 1; padding: 10px 16px 0 16px; gap: 10px; min-height: 0;">
+          <div style="flex: 2; display: flex; flex-direction: column; justify-content: center; min-width: 0;">
+            <div style="display: grid; grid-template-columns: max-content 1fr; row-gap: 4px; column-gap: 12px; align-items: center;">
+              <div style='font-size: 12px; font-weight: bold;'>Matricule :</div>
+              <div style='font-size: 12px;'>${card.studentid}</div>
+              <div style='font-size: 12px; font-weight: bold;'>Nom et Prénom :</div>
+              <div style='font-size: 12px;'>${card.lastname} ${card.firstname}</div>
+              <div style='font-size: 12px; font-weight: bold;'>Né(e) le :</div>
+              <div style='font-size: 12px;'>${card.dateofbirth || ''}</div>
+              <div style='font-size: 12px; font-weight: bold;'>Lieu de Naissance :</div>
+              <div style='font-size: 12px;'>${card.placeofbirth || ''}</div>
+              <div style='font-size: 12px; font-weight: bold;'>Filière :</div>
+              <div style='font-size: 12px;'>${card.program}</div>
             </div>
-            <span style="font-size: 18px; font-weight: bold;">CampusCard</span>
           </div>
-          <span style="font-size: 12px;">2025-2026</span>
-        </div>
-        
-        <div style="display: flex; align-items: center; margin-bottom: 15px;">
-          <div style="
-            width: 60px;
-            height: 60px;
-            background: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-size: 24px;
-          ">
-            👤
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 6px; min-width: 0;">
+            <div style="width: 64px; height: 72px; background: #e3eafc; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(37,99,235,0.08); display: flex; align-items: center; justify-content: center; margin-bottom: 2px;">
+              ${card.avatar ? `<img src="${card.avatar}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;" crossorigin="anonymous" />` : ''}
+            </div>
+            <img src="${qrDataUrl}" alt="QR Code" style="width: 48px; height: 48px; border-radius: 6px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 2px;" />
+            <div style="font-size: 10px; color: #2563eb; font-style: italic; letter-spacing: 0.5px; margin-top: 2px; text-align: center;">Visa Directeur</div>
           </div>
-          <div>
-            <h2 style="margin: 0; font-size: 20px; font-weight: bold;">${card.firstname} ${card.lastname}</h2>
-            <p style="margin: 5px 0; font-size: 14px; opacity: 0.9;">${card.program}</p>
-          </div>
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px;">
-          <div>
-            <p style="margin: 0; opacity: 0.8;">ID: ${card.studentid}</p>
-            <p style="margin: 0; opacity: 0.8;">Émission: ${new Date(card.issueddate).toLocaleDateString('fr-FR')}</p>
-          </div>
-          <div>
-            <p style="margin: 0; opacity: 0.8;">Expiration: ${new Date(card.expirydate).toLocaleDateString('fr-FR')}</p>
-            <p style="margin: 0; opacity: 0.8;">${card.department}</p>
-          </div>
-        </div>
-        
-        <div style="
-          position: absolute;
-          bottom: 20px;
-          right: 20px;
-          width: 40px;
-          height: 40px;
-          background: rgba(255,255,255,0.2);
-          border-radius: 5px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <div style="
-            width: 30px;
-            height: 30px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 3px;
-          "></div>
         </div>
       </div>
     `;
-    
     tempElement.style.position = 'fixed';
     tempElement.style.left = '-9999px';
     tempElement.style.top = '-9999px';

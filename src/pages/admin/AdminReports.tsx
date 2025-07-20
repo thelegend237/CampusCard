@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Download, TrendingUp, Users, CreditCard, DollarSign, Calendar } from 'lucide-react';
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// import autoTable from "jspdf-autotable"; // linter: not used
 
 const AdminReports: React.FC = () => {
   const [stats, setStats] = useState({
@@ -12,9 +12,23 @@ const AdminReports: React.FC = () => {
     monthlyGrowth: 0
   });
   const [loading, setLoading] = useState(true);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
+
+  // Weekly stats
+  const [weeklyStats, setWeeklyStats] = useState<{
+    students: number;
+    studentsPercent: number;
+    approvedCards: number;
+    cardsPercent: number;
+    revenue: number;
+    revenuePercent: number;
+  } | null>(null);
+  const [weeklyLoading, setWeeklyLoading] = useState(true);
 
   useEffect(() => {
     fetchReportsData();
+    fetchWeeklyStats();
   }, []);
 
   const fetchReportsData = async () => {
@@ -26,47 +40,39 @@ const AdminReports: React.FC = () => {
       ]);
 
       const users = usersResult.data || [];
-      const cards = cardsResult.data || [];
-      const payments = paymentsResult.data || [];
+      const cardsData = cardsResult.data || [];
+      const paymentsData = paymentsResult.data || [];
+      setCards(cardsData);
+      setPayments(paymentsData);
 
-      const totalRevenue = payments
-        .filter(p => p.status === 'approved')
-        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      const totalRevenue = paymentsData
+        .filter((p: any) => p.status === 'approved')
+        .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
 
       setStats({
-        totalStudents: users.filter(u => u.role === 'student').length,
-        totalCards: cards.length,
+        totalStudents: users.filter((u: any) => u.role === 'student').length,
+        totalCards: cardsData.length,
         totalRevenue,
         monthlyGrowth: (() => {
-          // Calcule la croissance mensuelle des paiements approuvés (en %)
-          // Croissance = (total ce mois - total mois précédent) / total mois précédent * 100
           const now = new Date();
           const thisMonth = now.getMonth();
           const thisYear = now.getFullYear();
-
-          // Paiements approuvés ce mois
-          const approvedPayments = payments.filter(p => p.status === 'approved');
-
+          const approvedPayments = paymentsData.filter((p: any) => p.status === 'approved');
           const totalThisMonth = approvedPayments
-            .filter(p => {
+            .filter((p: any) => {
               const d = new Date(p.created_at);
               return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
             })
-            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
-          // Paiements approuvés le mois précédent
+            .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
           const prevMonth = thisMonth === 0 ? 11 : thisMonth - 1;
           const prevYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-
           const totalPrevMonth = approvedPayments
-            .filter(p => {
+            .filter((p: any) => {
               const d = new Date(p.created_at);
               return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
             })
-            .reduce((sum, p) => sum + parseFloat(p.amount), 0);
-
+            .reduce((sum: number, p: any) => sum + parseFloat(p.amount), 0);
           if (totalPrevMonth === 0) {
-            // Si aucun paiement le mois précédent, croissance = 100% si il y a eu des paiements ce mois, sinon 0
             return totalThisMonth > 0 ? 100 : 0;
           }
           return Math.round(((totalThisMonth - totalPrevMonth) / totalPrevMonth) * 100);
@@ -79,6 +85,105 @@ const AdminReports: React.FC = () => {
     }
   };
 
+  // Weekly stats fetcher
+  const fetchWeeklyStats = async () => {
+    setWeeklyLoading(true);
+    // Dates pour cette semaine et la semaine précédente
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Lundi
+    startOfWeek.setHours(0, 0, 0, 0);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+    const startOfLastWeek = new Date(startOfWeek);
+    startOfLastWeek.setDate(startOfWeek.getDate() - 7);
+    const endOfLastWeek = new Date(startOfWeek);
+    const iso = (d: Date) => d.toISOString();
+    // Récupérer les étudiants inscrits cette semaine et la semaine dernière
+    const studentsPromise = supabase
+      .from('users')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'student')
+      .gte('created_at', iso(startOfWeek))
+      .lt('created_at', iso(endOfWeek));
+    const studentsLastWeekPromise = supabase
+      .from('users')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'student')
+      .gte('created_at', iso(startOfLastWeek))
+      .lt('created_at', iso(endOfLastWeek));
+    // Cartes approuvées cette semaine et la semaine dernière
+    const cardsPromise = supabase
+      .from('cards')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'approved')
+      .gte('created_at', iso(startOfWeek))
+      .lt('created_at', iso(endOfWeek));
+    const cardsLastWeekPromise = supabase
+      .from('cards')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'approved')
+      .gte('created_at', iso(startOfLastWeek))
+      .lt('created_at', iso(endOfLastWeek));
+    // Revenus cette semaine et la semaine dernière
+    const paymentsPromise = supabase
+      .from('payments')
+      .select('amount, status, created_at')
+      .eq('status', 'approved')
+      .gte('created_at', iso(startOfWeek))
+      .lt('created_at', iso(endOfWeek));
+    const paymentsLastWeekPromise = supabase
+      .from('payments')
+      .select('amount, status, created_at')
+      .eq('status', 'approved')
+      .gte('created_at', iso(startOfLastWeek))
+      .lt('created_at', iso(endOfLastWeek));
+    const [
+      studentsRes,
+      studentsLastWeekRes,
+      cardsRes,
+      cardsLastWeekRes,
+      paymentsRes,
+      paymentsLastWeekRes,
+    ] = await Promise.all([
+      studentsPromise,
+      studentsLastWeekPromise,
+      cardsPromise,
+      cardsLastWeekPromise,
+      paymentsPromise,
+      paymentsLastWeekPromise,
+    ]);
+    const students = studentsRes.count || 0;
+    const studentsLastWeek = studentsLastWeekRes.count || 0;
+    const studentsPercent = studentsLastWeek === 0
+      ? (students > 0 ? 100 : 0)
+      : Math.round(((students - studentsLastWeek) / studentsLastWeek) * 100);
+    const approvedCards = cardsRes.count || 0;
+    const approvedCardsLastWeek = cardsLastWeekRes.count || 0;
+    const cardsPercent = approvedCardsLastWeek === 0
+      ? (approvedCards > 0 ? 100 : 0)
+      : Math.round(((approvedCards - approvedCardsLastWeek) / approvedCardsLastWeek) * 100);
+    const revenue = (paymentsRes.data || []).reduce(
+      (sum: number, p: any) => sum + parseFloat(p.amount || 0),
+      0
+    );
+    const revenueLastWeek = (paymentsLastWeekRes.data || []).reduce(
+      (sum: number, p: any) => sum + parseFloat(p.amount || 0),
+      0
+    );
+    const revenuePercent = revenueLastWeek === 0
+      ? (revenue > 0 ? 100 : 0)
+      : Math.round(((revenue - revenueLastWeek) / revenueLastWeek) * 100);
+    setWeeklyStats({
+      students,
+      studentsPercent,
+      approvedCards,
+      cardsPercent,
+      revenue,
+      revenuePercent,
+    });
+    setWeeklyLoading(false);
+  };
 
 
   const generateReport = (type: string) => {
@@ -273,217 +378,81 @@ const AdminReports: React.FC = () => {
         On crée une fonction pour récupérer les statistiques réelles de la semaine.
         On suppose que supabase est importé et disponible.
       */}
-      {(() => {
-        // Début du code pour récupérer les données réelles
-        const [weeklyStats, setWeeklyStats] = React.useState<{
-          students: number;
-          studentsPercent: number;
-          approvedCards: number;
-          cardsPercent: number;
-          revenue: number;
-          revenuePercent: number;
-        } | null>(null);
-        const [loading, setLoading] = React.useState(true);
-
-        React.useEffect(() => {
-          const fetchWeeklyStats = async () => {
-            setLoading(true);
-            // Dates pour cette semaine et la semaine précédente
-            const now = new Date();
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Lundi
-            startOfWeek.setHours(0, 0, 0, 0);
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 7);
-
-            const startOfLastWeek = new Date(startOfWeek);
-            startOfLastWeek.setDate(startOfWeek.getDate() - 7);
-            const endOfLastWeek = new Date(startOfWeek);
-
-            // Format ISO pour Supabase
-            const iso = (d: Date) => d.toISOString();
-
-            // Récupérer les étudiants inscrits cette semaine et la semaine dernière
-            const studentsPromise = supabase
-              .from('users')
-              .select('id', { count: 'exact', head: true })
-              .eq('role', 'student')
-              .gte('created_at', iso(startOfWeek))
-              .lt('created_at', iso(endOfWeek));
-
-            const studentsLastWeekPromise = supabase
-              .from('users')
-              .select('id', { count: 'exact', head: true })
-              .eq('role', 'student')
-              .gte('created_at', iso(startOfLastWeek))
-              .lt('created_at', iso(endOfLastWeek));
-
-            // Cartes approuvées cette semaine et la semaine dernière
-            const cardsPromise = supabase
-              .from('cards')
-              .select('id', { count: 'exact', head: true })
-              .eq('status', 'approved')
-              .gte('created_at', iso(startOfWeek))
-              .lt('created_at', iso(endOfWeek));
-
-            const cardsLastWeekPromise = supabase
-              .from('cards')
-              .select('id', { count: 'exact', head: true })
-              .eq('status', 'approved')
-              .gte('created_at', iso(startOfLastWeek))
-              .lt('created_at', iso(endOfLastWeek));
-
-            // Revenus cette semaine et la semaine dernière
-            const paymentsPromise = supabase
-              .from('payments')
-              .select('amount, status, created_at')
-              .eq('status', 'approved')
-              .gte('created_at', iso(startOfWeek))
-              .lt('created_at', iso(endOfWeek));
-
-            const paymentsLastWeekPromise = supabase
-              .from('payments')
-              .select('amount, status, created_at')
-              .eq('status', 'approved')
-              .gte('created_at', iso(startOfLastWeek))
-              .lt('created_at', iso(endOfLastWeek));
-
-            // Exécution en parallèle
-            const [
-              studentsRes,
-              studentsLastWeekRes,
-              cardsRes,
-              cardsLastWeekRes,
-              paymentsRes,
-              paymentsLastWeekRes,
-            ] = await Promise.all([
-              studentsPromise,
-              studentsLastWeekPromise,
-              cardsPromise,
-              cardsLastWeekPromise,
-              paymentsPromise,
-              paymentsLastWeekPromise,
-            ]);
-
-            // Comptes
-            const students = studentsRes.count || 0;
-            const studentsLastWeek = studentsLastWeekRes.count || 0;
-            const studentsPercent = studentsLastWeek === 0
-              ? (students > 0 ? 100 : 0)
-              : Math.round(((students - studentsLastWeek) / studentsLastWeek) * 100);
-
-            const approvedCards = cardsRes.count || 0;
-            const approvedCardsLastWeek = cardsLastWeekRes.count || 0;
-            const cardsPercent = approvedCardsLastWeek === 0
-              ? (approvedCards > 0 ? 100 : 0)
-              : Math.round(((approvedCards - approvedCardsLastWeek) / approvedCardsLastWeek) * 100);
-
-            // Revenus
-            const revenue = (paymentsRes.data || []).reduce(
-              (sum: number, p: any) => sum + parseFloat(p.amount || 0),
-              0
-            );
-            const revenueLastWeek = (paymentsLastWeekRes.data || []).reduce(
-              (sum: number, p: any) => sum + parseFloat(p.amount || 0),
-              0
-            );
-            const revenuePercent = revenueLastWeek === 0
-              ? (revenue > 0 ? 100 : 0)
-              : Math.round(((revenue - revenueLastWeek) / revenueLastWeek) * 100);
-
-            setWeeklyStats({
-              students,
-              studentsPercent,
-              approvedCards,
-              cardsPercent,
-              revenue,
-              revenuePercent,
-            });
-            setLoading(false);
-          };
-
-          fetchWeeklyStats();
-        }, []);
-
-        // Affichage
-        return (
-          <div className="bg-white rounded-2xl p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Aperçu des activités</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Inscriptions cette semaine</h3>
-                    <p className="text-sm text-gray-600">
-                      {loading
-                        ? 'Chargement...'
-                        : `${weeklyStats?.students ?? 0} nouveaux étudiants`}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-blue-600 font-bold">
-                  {loading
-                    ? '...'
-                    : (weeklyStats
-                        ? (weeklyStats.studentsPercent > 0 ? '+' : '') + weeklyStats.studentsPercent + '%'
-                        : '0%')}
-                </span>
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-900 mb-6">Aperçu des activités</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-blue-600" />
               </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CreditCard className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Cartes approuvées</h3>
-                    <p className="text-sm text-gray-600">
-                      {loading
-                        ? 'Chargement...'
-                        : `${weeklyStats?.approvedCards ?? 0} cartes cette semaine`}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-green-600 font-bold">
-                  {loading
-                    ? '...'
-                    : (weeklyStats
-                        ? (weeklyStats.cardsPercent > 0 ? '+' : '') + weeklyStats.cardsPercent + '%'
-                        : '0%')}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <DollarSign className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Revenus cette semaine</h3>
-                    <p className="text-sm text-gray-600">
-                      {loading
-                        ? 'Chargement...'
-                        : `${weeklyStats
-                            ? parseFloat(weeklyStats.revenue.toString()).toLocaleString('fr-FR') + ' FCFA'
-                            : '0 FCFA'}`}
-                    </p>
-                  </div>
-                </div>
-                <span className="text-purple-600 font-bold">
-                  {loading
-                    ? '...'
-                    : (weeklyStats
-                        ? (weeklyStats.revenuePercent > 0 ? '+' : '') + weeklyStats.revenuePercent + '%'
-                        : '0%')}
-                </span>
+              <div>
+                <h3 className="font-semibold text-gray-900">Inscriptions cette semaine</h3>
+                <p className="text-sm text-gray-600">
+                  {weeklyLoading
+                    ? 'Chargement...'
+                    : `${weeklyStats?.students ?? 0} nouveaux étudiants`}
+                </p>
               </div>
             </div>
+            <span className="text-blue-600 font-bold">
+              {weeklyLoading
+                ? '...'
+                : (weeklyStats
+                    ? (weeklyStats.studentsPercent > 0 ? '+' : '') + weeklyStats.studentsPercent + '%'
+                    : '0%')}
+            </span>
           </div>
-        );
-      })()}
+
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Cartes approuvées</h3>
+                <p className="text-sm text-gray-600">
+                  {weeklyLoading
+                    ? 'Chargement...'
+                    : `${weeklyStats?.approvedCards ?? 0} cartes cette semaine`}
+                </p>
+              </div>
+            </div>
+            <span className="text-green-600 font-bold">
+              {weeklyLoading
+                ? '...'
+                : (weeklyStats
+                    ? (weeklyStats.cardsPercent > 0 ? '+' : '') + weeklyStats.cardsPercent + '%'
+                    : '0%')}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="w-5 h-5 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Revenus cette semaine</h3>
+                <p className="text-sm text-gray-600">
+                  {weeklyLoading
+                    ? 'Chargement...'
+                    : `${weeklyStats
+                        ? parseFloat(weeklyStats.revenue.toString()).toLocaleString('fr-FR') + ' FCFA'
+                        : '0 FCFA'}`}
+                </p>
+              </div>
+            </div>
+            <span className="text-purple-600 font-bold">
+              {weeklyLoading
+                ? '...'
+                : (weeklyStats
+                    ? (weeklyStats.revenuePercent > 0 ? '+' : '') + weeklyStats.revenuePercent + '%'
+                    : '0%')}
+            </span>
+          </div>
+        </div>
+      </div>
    </div>
   );
 };

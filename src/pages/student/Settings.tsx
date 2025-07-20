@@ -9,13 +9,13 @@ const Settings: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
+    firstname: user?.firstname || '',
+    lastname: user?.lastname || '',
     email: user?.email || '',
     phone: user?.phone || '',
     department: user?.department || '',
     program: user?.program || '',
-    studentId: user?.studentId || '',
+    studentid: user?.studentid || '',
   });
   const [notifications, setNotifications] = useState({
     email: true,
@@ -114,8 +114,9 @@ const Settings: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
+                    name="firstname"
+                    title="Prenom"
+                    value={formData.firstname}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -127,8 +128,9 @@ const Settings: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    name="lastName"
-                    value={formData.lastName}
+                    name="lastname"
+                    title="Nom"
+                    value={formData.lastname}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -141,6 +143,7 @@ const Settings: React.FC = () => {
                   <input
                     type="email"
                     name="email"
+                    title="Email"
                     value={formData.email}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -167,8 +170,8 @@ const Settings: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    name="studentId"
-                    value={formData.studentId}
+                    name="studentid"
+                    value={formData.studentid}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     readOnly

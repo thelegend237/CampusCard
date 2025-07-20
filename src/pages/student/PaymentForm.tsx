@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
-const PaymentForm: React.FC<{ amount: number; onSuccess?: () => void }> = ({ amount, onSuccess }) => {
+const PaymentForm: React.FC<{ amount: number; cardid?: string; onSuccess?: () => void }> = ({ amount, cardid, onSuccess }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [method, setMethod] = useState<'card' | 'mtn' | 'orange'>('card');
@@ -37,6 +37,7 @@ const PaymentForm: React.FC<{ amount: number; onSuccess?: () => void }> = ({ amo
       const { error } = await supabase.from('payments').insert([
         {
           userid: user?.id,
+          cardid: cardid || null,
           amount,
           description: 'Frais de carte étudiant',
           status: 'pending',

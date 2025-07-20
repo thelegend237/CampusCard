@@ -10,6 +10,7 @@ export interface User {
   avatar?: string;
   phone?: string;
   dateofbirth?: string;
+  placeofbirth?: string;
   created_at: string;
   updated_at?: string;
 }
@@ -29,6 +30,8 @@ export interface Card {
   qrCode?: string;
   created_at: string;
   updated_at?: string;
+  dateofbirth?: string;
+  placeofbirth?: string;
 }
 
 export interface Payment {

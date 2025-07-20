@@ -33,10 +33,10 @@ const AdminStudents: React.FC = () => {
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = 
-      student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.studentId?.toLowerCase().includes(searchTerm.toLowerCase());
+      (student.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (student.studentId || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesDepartment = filterDepartment === '' || student.department === filterDepartment;
     
@@ -144,7 +144,8 @@ const AdminStudents: React.FC = () => {
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                         <span className="text-blue-600 font-medium">
-                          {student.firstName[0]}{student.lastName[0]}
+                          {(student.firstName || '')[0] || ''}
+                          {(student.lastName || '')[0] || ''}
                         </span>
                       </div>
                       <div className="ml-4">

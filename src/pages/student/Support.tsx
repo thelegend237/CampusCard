@@ -161,6 +161,7 @@ const Support: React.FC = () => {
                 <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={selectedCategory}
+                  title='Catégorie'
                   onChange={(e) => setSelectedCategory(e.target.value)}
                 >
                   <option value="general">Question générale</option>

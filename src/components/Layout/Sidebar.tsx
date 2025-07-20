@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   CreditCard,
@@ -48,10 +48,12 @@ const Sidebar: React.FC = () => {
     <aside className="w-64 bg-gray-900 text-white min-h-screen">
       <div className="p-6">
         <div className="flex items-center space-x-2 mb-8">
-          <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 via-red-500 to-green-500 rounded-full flex items-center justify-center">
-            <span className="text-white font-bold text-sm">IUT</span>
-          </div>
-          <span className="text-xl font-bold text-blue-400">CampusCard</span>
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
+            </div>
+            <span className="text-xl font-bold text-white">CampusCard</span>
+          </Link>
         </div>
 
         <nav className="space-y-2">

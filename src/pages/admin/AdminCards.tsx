@@ -23,6 +23,8 @@ const AdminCards: React.FC = () => {
         `)
         .order('created_at', { ascending: false });
 
+      console.log('Cartes récupérées:', data); // Ajout du console.log
+
       if (error) throw error;
       setCards(data || []);
     } catch (error) {

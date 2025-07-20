@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, Bell, User, HelpCircle, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Header: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -17,10 +17,12 @@ const Header: React.FC = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-yellow-400 via-red-500 to-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">IUT</span>
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
             </div>
-            <span className="text-xl font-bold text-blue-600">CampusCard</span>
+            <span className="text-xl font-bold text-white">CampusCard</span>
+          </Link>
           </div>
           
           <div className="relative">
@@ -47,7 +49,7 @@ const Header: React.FC = () => {
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">{user?.firstName}</span>
+              <span className="text-sm font-medium text-gray-700">{user?.firstname}</span>
             </div>
             <button
               onClick={handleSignOut}
