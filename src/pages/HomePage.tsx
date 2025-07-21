@@ -34,7 +34,7 @@ const HomePage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-2">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-tr from-blue-500 to-purple-500 shadow-lg">
-                  <img src="/public/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
+                  <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
               </div>
                 <span className={`text-xl font-bold text-blue-400 ${glowText}`}>CampusCard</span>
             </Link>
