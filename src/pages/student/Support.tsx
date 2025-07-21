@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { Send, Phone, Mail, MapPin, Clock, HelpCircle, MessageCircle, Book } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 const Support: React.FC = () => {
+  const { user } = useAuth();
+  const [form, setForm] = useState({ fullname: '', email: '', category: 'general', message: '' });
+  const [sending, setSending] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('general');
-  const [message, setMessage] = useState('');
 
   const faqItems = [
     {
@@ -35,11 +39,28 @@ const Support: React.FC = () => {
 
   const filteredFAQ = faqItems.filter(item => item.category === selectedCategory);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    alert('Votre message a été envoyé avec succès !');
-    setMessage('');
+    setSending(true);
+    const { error } = await supabase.from('support_messages').insert([{
+      userid: user?.id,
+      fullname: form.fullname,
+      email: form.email,
+      category: form.category,
+      message: form.message,
+    }]);
+    setSending(false);
+    if (!error) {
+      alert('Votre message a bien été envoyé. Un administrateur vous répondra bientôt.');
+      setForm({ fullname: '', email: '', category: 'general', message: '' });
+    } else {
+      alert('Erreur lors de l\'envoi du message.');
+    }
   };
 
   return (
@@ -135,6 +156,9 @@ const Support: React.FC = () => {
                   </label>
                   <input
                     type="text"
+                    name="fullname"
+                    value={form.fullname}
+                    onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Votre nom complet"
@@ -147,6 +171,9 @@ const Support: React.FC = () => {
                   </label>
                   <input
                     type="email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="votre@email.com"
@@ -159,10 +186,12 @@ const Support: React.FC = () => {
                   Catégorie
                 </label>
                 <select
+                  name="category"
+                  value={form.category}
+                  onChange={handleInputChange}
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  value={selectedCategory}
-                  title='Catégorie'
-                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  title="Catégorie"
                 >
                   <option value="general">Question générale</option>
                   <option value="payment">Problème de paiement</option>
@@ -176,10 +205,11 @@ const Support: React.FC = () => {
                   Message
                 </label>
                 <textarea
+                  name="message"
                   rows={4}
+                  value={form.message}
+                  onChange={handleInputChange}
                   required
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Décrivez votre problème ou question..."
                 />
@@ -188,9 +218,10 @@ const Support: React.FC = () => {
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                disabled={sending}
               >
                 <Send className="w-5 h-5" />
-                <span>Envoyer le message</span>
+                <span>{sending ? 'Envoi...' : 'Envoyer le message'}</span>
               </button>
             </form>
           </div>

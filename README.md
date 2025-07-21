@@ -1,6 +1,6 @@
 # CampusCard Creator
 
-CampusCard Creator est une application web moderne permettant aux étudiants de générer, visualiser et télécharger leur carte d'étudiant en ligne, tout en offrant aux administrateurs un tableau de bord complet pour la gestion des étudiants, des cartes et des paiements.
+CampusCard Creator est une application web moderne permettant aux étudiants de générer, visualiser et télécharger leur carte d'étudiant en ligne, tout en offrant aux administrateurs un tableau de bord pour la gestion des étudiants, des cartes et des paiements.
 
 ## Fonctionnalités principales
 
@@ -15,10 +15,8 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
 - **Support et gestion du profil**
 
 ### Pour les administrateurs
-- **Back office totalement indépendant du front office** (layout, navigation, sécurité)
+- **Back office indépendant du front office** (layout, navigation, sécurité)
 - **Tableau de bord global** (statistiques, activité récente)
-- **Gestion des étudiants** (liste, suppression, recherche)
-- **Gestion des cartes** (validation, émission, statut)
 - **Gestion des paiements** (validation, suivi, historique)
 - **Gestion des départements et programmes**
 - **Rapports et export PDF**
@@ -30,12 +28,12 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
 ├── src/
 │   ├── App.tsx                # Point d'entrée principal, routes et protections
 │   ├── main.tsx               # Bootstrap React
-│   ├── components/            # Composants réutilisables (Layout, AdminRoute, etc.)
+│   ├── components/            # Composants réutilisables
 │   ├── contexts/              # Contextes globaux (authentification)
 │   ├── lib/                   # Configuration Supabase
 │   ├── pages/                 # Pages principales (étudiant, admin, login, accueil)
 │   │   └── student/           # Pages étudiantes (Dashboard, CardGeneration, StudentCardView...)
-│   │   └── admin/             # Pages admin (Dashboard, Students, Cards, Payments...)
+│   │   └── admin/             # Pages admin (Dashboard, Payments...)
 │   ├── types/                 # Définition des types TypeScript (User, Card, Payment...)
 │   ├── utils/                 # Fonctions utilitaires (génération PDF, etc.)
 │   └── index.css, vite-env.d.ts
@@ -68,12 +66,12 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
   - `/dashboard/student/card-view` : **Vue détaillée de la carte (recto/verso, flip 3D)**
 - `/student/card-view` : **Accès direct à la vue détaillée de la carte**
 - `/admin` : Tableau de bord admin (routes protégées, accès admin uniquement)
-  - `/admin/dashboard`, `/admin/students`, `/admin/cards`, ...
+  - `/admin/dashboard`, `/admin/payments`, ...
 
-## Séparation stricte back office / front office
-- **Le back office admin est totalement séparé du front office étudiant** (layout, navigation, policies, dépendances).
-- **Protection des routes admin** via le composant `AdminRoute` (seuls les utilisateurs avec le rôle `admin` peuvent accéder à `/admin/*`).
-- **Layout admin dédié** (`AdminLayout.tsx`) avec menu, header, couleurs et navigation propres à l'admin.
+## Séparation back office / front office
+- **Le back office admin est séparé du front office étudiant** (layout, navigation, policies, dépendances).
+- **Protection des routes admin** via une logique dédiée (seuls les utilisateurs avec le rôle `admin` peuvent accéder à `/admin/*`).
+- **Layout admin dédié** avec menu, header, couleurs et navigation propres à l'admin.
 - **Aucune page admin n'est accessible ou importée côté front office.**
 
 ## Sécurité et policies Supabase
@@ -119,8 +117,7 @@ CampusCard Creator est une application web moderne permettant aux étudiants de 
 1. **Connexion en tant qu'admin**
 2. **Accès au dashboard admin**
 3. **Validation des paiements** (changement du statut en `approved`)
-4. **Validation/émission des cartes**
-5. **Gestion des étudiants, départements, rapports**
+4. **Gestion des départements, rapports**
 
 ## Génération et visualisation de la carte
 - **Composant dédié** pour la carte avec effet flip 3D (recto/verso)
@@ -146,3 +143,19 @@ Les contributions sont les bienvenues ! Merci de créer une issue ou une pull re
 
 ## Licence
 MIT 
+
+## Déploiement sur Vercel
+
+Ce projet est prêt pour un déploiement sur [Vercel](https://vercel.com/).
+
+### Étapes :
+1. Poussez votre code sur un repository GitHub, GitLab ou Bitbucket.
+2. Connectez-vous sur [vercel.com](https://vercel.com/) et importez votre repository.
+3. Vercel détectera automatiquement Vite et utilisera la commande `npm run build`.
+4. Le dossier de sortie est `dist` (configuré dans `vercel.json`).
+5. Ajoutez vos variables d'environnement (ex : SUPABASE_URL, SUPABASE_ANON_KEY) dans l'onglet "Environment Variables" du dashboard Vercel.
+6. Lancez le déploiement !
+
+Aucune configuration supplémentaire n'est requise pour un projet Vite standard.
+
+Pour des besoins avancés (redirections, headers, etc.), modifiez le fichier `vercel.json` à la racine du projet. 

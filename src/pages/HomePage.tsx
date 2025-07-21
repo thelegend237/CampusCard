@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { Mail, ShoppingCart, MapPin, Linkedin, Facebook, Twitter, Phone, Clock} from "lucide-react";
 
 // Ajout du scroll fluide global
 if (typeof window !== 'undefined') {
@@ -39,17 +40,17 @@ const HomePage: React.FC = () => {
             </Link>
           </div>
             <nav className="hidden md:flex space-x-8">
-              <a href="#hero" className="text-gray-200 hover:text-blue-400 transition-colors font-semibold tracking-wide">🏠 Accueil</a>
-              <a href="#how" className="text-gray-200 hover:text-blue-400 transition-colors font-semibold tracking-wide">⚙️ Comment ça marche</a>
-              <a href="#faq" className="text-gray-200 hover:text-blue-400 transition-colors font-semibold tracking-wide">❓ FAQ</a>
-              <a href="#contact" className="text-gray-200 hover:text-blue-400 transition-colors font-semibold tracking-wide">📞 Contact</a>
+              <a href="#hero" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">🏠 Accueil</a>
+              <a href="#how" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">⚙️ Comment ça marche</a>
+              <a href="#faq" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">❓ FAQ</a>
+              <a href="#contact" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">📞 Contact</a>
             </nav>
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/login')}
                 className="bg-gradient-to-tr from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform font-semibold border border-white/20 backdrop-blur-md"
               >
-              {user?.firstname || '👤 User'}
+              {user?.firstname || '😀 User'}
               </button>
             </div>
           </div>
@@ -228,41 +229,60 @@ const HomePage: React.FC = () => {
           <h2 className={`text-5xl font-extrabold text-blue-700 mb-12 text-center ${glowText}`}>📞 Contact</h2>
           <div className={`bg-white/90 backdrop-blur-md border border-blue-100 shadow-lg rounded-3xl p-12 flex flex-col gap-6 items-center`}> 
             <div className="flex items-center gap-4">
-              <span className="text-2xl text-blue-600">📧</span>
+              <Mail className="w-7 h-7 text-blue-600" />
               <a href="mailto:support@iut-douala.edu" className="text-blue-700 hover:underline text-lg font-semibold">support@iut-douala.edu</a>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-2xl text-blue-600">📞</span>
+              <Phone className="w-7 h-7 text-blue-600" />
               <a href="tel:+237233400380" className="text-blue-700 hover:underline text-lg font-semibold">+237 233 40 03 80</a>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-2xl text-blue-600">📍</span>
+              <MapPin className="w-7 h-7 text-blue-600" />
               <span className="text-gray-700 text-lg font-semibold">IUT de Douala, Bâtiment administratif, 1er étage</span>
           </div>
             <div className="flex items-center gap-4">
-              <span className="text-2xl text-blue-600">⏰</span>
+              <Clock className="w-7 h-7 text-blue-600" />
               <span className="text-gray-700 text-lg font-semibold">Lundi à vendredi : 9h-16h, Samedi : 9h-12h</span>
           </div>
           </div>
         </div>
       </section>
 
-      <footer className="bg-gradient-to-tr from-blue-900/90 to-purple-900/90 border-t border-white/10 mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2">
-            <img src="/public/logo-iut.png" alt="Logo IUT" className="w-10 h-10 object-contain rounded-full" />
-            <span className="text-lg font-bold text-blue-100 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">CampusCard</span>
+     
+      <footer className="bg-gradient-to-tr from-blue-900/95 to-purple-900/95 border-t border-blue-800/40 shadow-2xl mt-2">
+        <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex items-center space-x-3">
+            <img src="/public/logo-iut.png" alt="Logo IUT" className="w-12 h-12 object-contain rounded-full shadow-lg border-2 border-blue-400/30" />
+            <span className="text-2xl font-extrabold text-blue-100 tracking-wide drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">CampusCard</span>
           </div>
-          <div className="flex flex-col md:flex-row md:space-x-8 text-blue-100 text-sm items-center gap-2 md:gap-0">
-            <a href="#hero" className="hover:text-blue-400 transition-colors">Accueil</a>
-            <a href="#how" className="hover:text-blue-400 transition-colors">Comment ça marche</a>
-            <a href="#faq" className="hover:text-blue-400 transition-colors">FAQ</a>
-            <a href="#contact" className="hover:text-blue-400 transition-colors">Contact</a>
+          <div className="flex flex-col md:flex-row md:items-center gap-4 text-blue-200 text-sm font-medium">
+            <div className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-blue-400" />
+              <a href="mailto:support@iut-douala.edu" className="hover:underline">support@iut-douala.edu</a>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-blue-400" />
+              <a href="tel:+237233400380" className="hover:underline">+237 233 40 03 80</a>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-blue-400" />
+              <span>IUT de Douala, 1er étage</span>
+            </div>
           </div>
-          <div className="text-blue-200 text-xs text-center md:text-right">
-            <div>© {new Date().getFullYear()} CampusCard Creator. Tous droits réservés.</div>
-            <div>support@iut-douala.edu | +237 233 40 03 80</div>
+          <div className="flex items-center gap-4 mt-6 md:mt-0">
+            <a href="#" title="LinkedIn" className="hover:scale-110 transition-transform">
+              <Linkedin className="w-6 h-6 text-blue-400" />
+            </a>
+            <a href="#" title="Facebook" className="hover:scale-110 transition-transform">
+              <Facebook className="w-6 h-6 text-blue-400" />
+            </a>
+            <a href="#" title="Twitter" className="hover:scale-110 transition-transform">
+              <Twitter className="w-6 h-6 text-blue-400" />
+            </a>
           </div>
+        </div>
+        <div className="border-t border-blue-800/40 mt-2 p-4 text-center text-blue-300 text-xs font-light tracking-wide">
+          © {new Date().getFullYear()} CampusCard Creator. Tous droits réservés.
         </div>
       </footer>
     </div>

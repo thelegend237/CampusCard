@@ -22,17 +22,17 @@ const Dashboard: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-  const fetchUserData = async () => {
+    const fetchUserData = async () => {
       if (!user) {
         console.log('Aucun utilisateur connecté');
         return;
       }
-    try {
+      try {
         console.log('Utilisateur connecté :', user);
-      // Fetch user's card
+        // Fetch user's card
         const { data: cardDataArr, error: cardError } = await supabase
-        .from('cards')
-        .select('*')
+          .from('cards')
+          .select('*')
           .eq('userid', user.id)
           .order('created_at', { ascending: false })
           .limit(1);
@@ -41,29 +41,34 @@ const Dashboard: React.FC = () => {
           console.error('Erreur requête carte :', cardError);
         }
         console.log('Réponse carte (cardData) :', cardData);
-      // Fetch user's payments
+        // Fetch user's payments
         const { data: paymentData, error: paymentError } = await supabase
-        .from('payments')
-        .select('*')
+          .from('payments')
+          .select('*')
           .eq('userid', user.id)
           .order('created_at', { ascending: false });
         if (paymentError) {
           console.error('Erreur requête paiements :', paymentError);
         }
         console.log('Réponse paiements (paymentData) :', paymentData);
-      setCard(cardData);
-      setPayments(paymentData || []);
-        console.log('card (state) :', cardData);
-        console.log('payments (state) :', paymentData);
+        setCard(cardData);
+        setPayments(paymentData || []);
+        // Fetch user's notifications
+        const { data: notifData } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('userid', user.id)
+          .order('created_at', { ascending: false });
+        setNotifications(notifData || []);
         if (paymentData && paymentData.length > 0) {
           console.log('Statut du paiement le plus récent :', paymentData[0].status);
         }
       } catch (err) {
         console.error('Erreur fetchUserData :', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUserData();
   }, [user]);
 
@@ -158,45 +163,9 @@ const Dashboard: React.FC = () => {
               <Bell className="w-8 h-8" />
             </div>
           </div>
-          {notifications && notifications.length > 0 ? (
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {notifications.slice(0, 3).map((notif) => (
-                <div
-                  key={notif.id}
-                  className={`p-3 rounded-lg ${notif.read ? 'bg-gray-700 opacity-70' : 'bg-blue-900'} flex items-start gap-2`}
-                >
-                  <div className="flex-shrink-0 mt-1">
-                    {notif.type === 'success' ? (
-                      <span className="text-green-400">✔️</span>
-                    ) : notif.type === 'error' ? (
-                      <span className="text-red-400">❌</span>
-                    ) : notif.type === 'warning' ? (
-                      <span className="text-yellow-400">⚠️</span>
-                    ) : (
-                      <span className="text-blue-400">ℹ️</span>
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-semibold">{notif.title}</div>
-                    <div className="text-sm">{notif.message}</div>
-                    <div className="text-xs text-gray-300 mt-1">
-                      {(() => {
-                        const now = new Date();
-                        const created = new Date(notif.created_at);
-                        const diff = Math.floor((now.getTime() - created.getTime()) / 1000);
-                        if (diff < 60) return `il y a ${diff} sec.`;
-                        if (diff < 3600) return `il y a ${Math.floor(diff / 60)} min.`;
-                        if (diff < 86400) return `il y a ${Math.floor(diff / 3600)} h`;
-                        return created.toLocaleDateString('fr-FR');
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-300">Aucune notification</p>
-          )}
+          <p className="text-sm text-gray-300">
+            Consultez le détail de vos notifications dans l'onglet "Notifications" de la page Historique.
+          </p>
         </div>
       </div>
 

@@ -28,6 +28,32 @@ const CardGeneration: React.FC = () => {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isBackPreview, setIsBackPreview] = useState(false);
 
+  // Ajout : États pour vérifier une carte existante
+  const [existingCardStatus, setExistingCardStatus] = useState<string | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
+
+  // Ajout : Vérification d'une carte existante au chargement
+  useEffect(() => {
+    const checkExistingCard = async () => {
+      if (!user) return;
+      setIsLoadingStatus(true);
+      const { data } = await supabase
+        .from('cards')
+        .select('status')
+        .eq('userid', user.id)
+        .in('status', ['pending', 'approved']) // On cherche une carte active
+        .limit(1)
+        .single();
+
+      if (data) {
+        setExistingCardStatus(data.status);
+      }
+      setIsLoadingStatus(false);
+    };
+
+    checkExistingCard();
+  }, [user]);
+
   // Dynamique : récupération du paiement et de la carte
   // Typage explicite pour éviter never
   interface CardType {
@@ -212,95 +238,114 @@ const CardGeneration: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form Section */}
         <div className="bg-gray-800 rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-white mb-6">Informations personnelles</h2>
-          
-          <form onSubmit={handleValidateInfo} className="space-y-6">
-            {/* Photo Upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Photo d'identité
-              </label>
-              <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
-                <div className="w-24 h-24 bg-gray-700 rounded-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
-                  {formData.avatar ? (
-                    <img src={formData.avatar} alt="Avatar" className="w-24 h-24 object-cover" />
-                  ) : (
-                  <span className="text-4xl">👤</span>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="avatar-upload"
-                />
-                <label
-                  htmlFor="avatar-upload"
-                  className="text-blue-400 hover:text-blue-300 text-sm font-medium cursor-pointer"
-                >
-                  Cliquez ou glissez pour changer
-                </label>
-                <p className="text-xs text-gray-400 mt-2">Format JPG, PNG • Max 5 MB</p>
-              </div>
+          {isLoadingStatus ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
             </div>
-
-            {!isBackPreview ? (
-              <>
-                {/* Formulaire recto (infos classiques) */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Prénom
-                </label>
-                <input
-                  type="text"
-                      name="firstname"
-                  value={formData.firstname}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Prénom"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Nom
-                </label>
-                <input
-                  type="text"
-                      name="lastname"
-                  value={formData.lastname}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nom"
+          ) : existingCardStatus ? (
+            <div>
+              <h2 className="text-xl font-bold text-white mb-4">
+                Vous avez déjà une demande de carte en cours
+              </h2>
+              <p className="text-gray-300">
+                Le statut actuel de votre demande est :{' '}
+                <span className="font-semibold text-yellow-400">{existingCardStatus}</span>.
+              </p>
+              <p className="text-gray-400 mt-4">
+                Veuillez suivre son avancement dans la section "État du processus" ci-contre.
+                Vous pourrez soumettre une nouvelle demande si celle-ci est rejetée ou après sa date d'expiration.
+              </p>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold text-white mb-6">Informations personnelles</h2>
+              <form onSubmit={handleValidateInfo} className="space-y-6">
+                {/* Photo Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Photo d'identité
+                  </label>
+                  <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
+                    <div className="w-24 h-24 bg-gray-700 rounded-lg mx-auto mb-4 flex items-center justify-center overflow-hidden">
+                      {formData.avatar ? (
+                        <img src={formData.avatar} alt="Avatar" className="w-24 h-24 object-cover" />
+                      ) : (
+                      <span className="text-4xl">👤</span>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="avatar-upload"
                     />
+                    <label
+                      htmlFor="avatar-upload"
+                      className="text-blue-400 hover:text-blue-300 text-sm font-medium cursor-pointer"
+                    >
+                      Cliquez ou glissez pour changer
+                    </label>
+                    <p className="text-xs text-gray-400 mt-2">Format JPG, PNG • Max 5 MB</p>
                   </div>
                 </div>
+
+                {!isBackPreview ? (
+                  <>
+                    {/* Formulaire recto (infos classiques) */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Date de naissance
+                      Prénom
                     </label>
                     <input
-                      type="date"
-                      name="dateofbirth"
-                      value={formData.dateofbirth}
+                      type="text"
+                          name="firstname"
+                      value={formData.firstname}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="JJ/MM/AAAA"
+                          placeholder="Prénom"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Lieu de naissance
+                      Nom
                     </label>
                     <input
                       type="text"
-                      name="placeofbirth"
-                      value={formData.placeofbirth}
+                          name="lastname"
+                      value={formData.lastname}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Ville, pays..."
+                          placeholder="Nom"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Date de naissance
+                        </label>
+                        <input
+                          type="date"
+                          name="dateofbirth"
+                          value={formData.dateofbirth}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="JJ/MM/AAAA"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Lieu de naissance
+                        </label>
+                        <input
+                          type="text"
+                          name="placeofbirth"
+                          value={formData.placeofbirth}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Ville, pays..."
                 />
               </div>
             </div>
@@ -405,6 +450,8 @@ const CardGeneration: React.FC = () => {
           )}
           {showPaymentForm && (
             <PaymentForm amount={5000} />
+          )}
+            </>
           )}
         </div>
 

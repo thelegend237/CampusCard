@@ -10,15 +10,15 @@ import CardGeneration from './pages/student/CardGeneration';
 import History from './pages/student/History';
 import Settings from './pages/student/Settings';
 import Support from './pages/student/Support';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminStudents from './pages/admin/AdminStudents';
-import AdminCards from './pages/admin/AdminCards';
-import AdminPayments from './pages/admin/AdminPayments';
-import AdminDepartments from './pages/admin/AdminDepartments';
-import AdminReports from './pages/admin/AdminReports';
-import AdminSettings from './pages/admin/AdminSettings';
-import AdminLayout from './components/AdminLayout';
-import AdminRoute from './components/AdminRoute';
+import AdminDashboard from '../admin/src/pages/AdminDashboard';
+import AdminStudents from '../admin/src/pages/AdminStudents';
+import AdminCards from '../admin/src/pages/AdminCards';
+import AdminPayments from '../admin/src/pages/AdminPayments';
+import AdminDepartments from '../admin/src/pages/AdminDepartments';
+import AdminReports from '../admin/src/pages/AdminReports';
+import AdminSettings from '../admin/src/pages/AdminSettings';
+import AdminLayout from '../admin/src/components/AdminLayout';
+import AdminRoute from '../admin/src/components/AdminRoute';
 import StudentCardView from './pages/student/StudentCardView';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ 

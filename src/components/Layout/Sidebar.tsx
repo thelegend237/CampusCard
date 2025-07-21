@@ -1,12 +1,11 @@
 import React from 'react';
-import { NavLink, useLocation, Link } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   CreditCard,
   History,
   Settings,
   HelpCircle,
-  Play,
   LogOut,
   Users,
   FileText,
@@ -17,15 +16,14 @@ import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar: React.FC = () => {
   const { user, signOut } = useAuth();
-  const location = useLocation();
 
   const studentNavItems = [
     { path: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
-    { path: '/payment-status', label: 'État du paiement', icon: DollarSign },
-    { path: '/card-generation', label: 'Génération de carte', icon: CreditCard },
-    { path: '/history', label: 'Historique', icon: History },
-    { path: '/support', label: 'Support', icon: HelpCircle },
-    { path: '/settings', label: 'Paramètres', icon: Settings },
+    { path: '/dashboard/payment-status', label: 'État du paiement', icon: DollarSign },
+    { path: '/dashboard/card-generation', label: 'Génération de carte', icon: CreditCard },
+    { path: '/dashboard/history', label: 'Historique', icon: History },
+    { path: '/dashboard/support', label: 'Support', icon: HelpCircle },
+    { path: '/dashboard/settings', label: 'Paramètres', icon: Settings },
   ];
 
   const adminNavItems = [
@@ -61,6 +59,7 @@ const Sidebar: React.FC = () => {
             <NavLink
               key={item.path}
               to={item.path}
+              end
               className={({ isActive }) =>
                 `flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Payment } from '../../types';
+import { Payment } from '../../../src/types';
 import { Search, Filter, Download, Check, X, Eye, DollarSign } from 'lucide-react';
 
 const AdminPayments: React.FC = () => {
