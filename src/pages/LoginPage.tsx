@@ -47,9 +47,9 @@ const LoginPage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 via-red-500 to-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">IUT</span>
-              </div>
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
+            </div>
             </div>
             <h2 className="text-3xl font-bold text-blue-600 mb-2">CampusCard</h2>
             
