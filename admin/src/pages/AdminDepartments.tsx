@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Department } from '../../types';
+import { Department } from '../../../src/types';
 import { Plus, Edit, Trash2, Save, X } from 'lucide-react';
 
 const AdminDepartments: React.FC = () => {

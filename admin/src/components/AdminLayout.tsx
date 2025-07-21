@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, DollarSign, Building, FileText, Settings, LogOut } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { LayoutDashboard, Users, CreditCard, DollarSign, Building, FileText, Settings, LogOut, HelpCircle } from 'lucide-react';
+import { useAuth } from '../../../src/contexts/AuthContext';
 
 const adminNavItems = [
   { path: '/admin/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
@@ -10,6 +10,7 @@ const adminNavItems = [
   { path: '/admin/payments', label: 'Paiements', icon: DollarSign },
   { path: '/admin/departments', label: 'Départements', icon: Building },
   { path: '/admin/reports', label: 'Rapports', icon: FileText },
+  { path: '/admin/support', label: 'Support', icon: HelpCircle },
   { path: '/admin/settings', label: 'Paramètres', icon: Settings },
 ];
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../../src/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {

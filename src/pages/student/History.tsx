@@ -34,7 +34,7 @@ const History: React.FC = () => {
         supabase
           .from('notifications')
           .select('*')
-          .eq('userId', user.id)
+          .eq('userid', user.id)
           .order('created_at', { ascending: false })
       ]);
 
@@ -175,10 +175,10 @@ const History: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      {payment.paymentMethod && (
+                      {payment.paymentmethod && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-sm text-gray-600">
-                            Méthode: {payment.paymentMethod}
+                            Méthode: {payment.paymentmethod}
                           </p>
                         </div>
                       )}
@@ -206,10 +206,10 @@ const History: React.FC = () => {
                           {getStatusIcon(card.status)}
                           <div>
                             <h3 className="font-semibold text-gray-900">
-                              Carte d'étudiant - {card.firstName} {card.lastName}
+                              Carte d'étudiant - {card.firstname} {card.lastname}
                             </h3>
                             <p className="text-sm text-gray-500">
-                              ID: {card.studentId} • {card.department}
+                              ID: {card.studentid} • {card.department}
                             </p>
                             <p className="text-sm text-gray-500">
                               Créée le {new Date(card.created_at).toLocaleDateString('fr-FR')}
@@ -222,18 +222,42 @@ const History: React.FC = () => {
                           </span>
                           {card.status === 'approved' && (
                             <div className="mt-2">
-                              <button className="text-blue-600 hover:text-blue-500 text-sm font-medium">
+                              <button
+                                className="text-blue-600 hover:text-blue-500 text-sm font-medium"
+                                onClick={async () => {
+                                  // Génération d'un reçu PDF simple pour la carte
+                                  const { jsPDF } = await import('jspdf');
+                                  const doc = new jsPDF();
+
+                                  doc.setFontSize(18);
+                                  doc.text('Reçu de Carte Étudiant', 20, 20);
+
+                                  doc.setFontSize(12);
+                                  doc.text(`Nom: ${card.firstname} ${card.lastname}`, 20, 40);
+                                  doc.text(`ID Étudiant: ${card.studentid}`, 20, 50);
+                                  doc.text(`Département: ${card.department}`, 20, 60);
+                                  doc.text(`Statut: ${getStatusText(card.status)}`, 20, 70);
+                                  doc.text(`Date de création: ${new Date(card.created_at).toLocaleDateString('fr-FR')}`, 20, 80);
+                                  if (card.expirydate) {
+                                    doc.text(`Date d'expiration: ${new Date(card.expirydate).toLocaleDateString('fr-FR')}`, 20, 90);
+                                  }
+
+                                  doc.text('Ce document atteste de la génération de votre carte étudiant.', 20, 110);
+
+                                  doc.save(`recu-carte-${card.studentid}.pdf`);
+                                }}
+                              >
                                 <Download className="w-4 h-4 inline mr-1" />
-                                Télécharger
+                                Télécharger le reçu
                               </button>
                             </div>
                           )}
                         </div>
                       </div>
-                      {card.expiryDate && (
+                      {card.expirydate && (
                         <div className="mt-3 pt-3 border-t border-gray-200">
                           <p className="text-sm text-gray-600">
-                            Expire le: {new Date(card.expiryDate).toLocaleDateString('fr-FR')}
+                            Expire le: {new Date(card.expirydate).toLocaleDateString('fr-FR')}
                           </p>
                         </div>
                       )}

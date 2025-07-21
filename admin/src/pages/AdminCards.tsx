@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Card } from '../../types';
+import { Card } from '../../../src/types';
 import { Search, Filter, Download, Check, X, Eye, Calendar } from 'lucide-react';
 
 const AdminCards: React.FC = () => {

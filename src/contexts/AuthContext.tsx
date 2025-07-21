@@ -52,11 +52,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('id', userId)
-        .single();
+        .eq('id', userId);
 
-      if (error) throw error;
-      setUser(data);
+      if (error) {
+        // Gère les erreurs de requête
+        if (error.code === 'PGRST116') {
+          // C'est l'erreur "0 ou N lignes". Dans ce cas, on peut considérer l'utilisateur comme n'ayant pas de profil
+          console.warn('User profile not found or multiple profiles exist for:', userId);
+          setUser(null); // ou une valeur par défaut
+          return;
+        }
+        throw error;
+      }
+
+      // Traite la réponse comme un tableau
+      if (data && data.length > 0) {
+        setUser(data[0]); // Prend le premier résultat
+      } else {
+        console.warn('No user profile found for:', userId);
+        setUser(null); // Pas de profil trouvé
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
     } finally {
@@ -74,22 +89,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
 
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert([
-          {
-            id: data.user.id,
-            email,
-            role: 'student',
-            firstname: userData.firstName,
-            lastname: userData.lastName,
-            studentid: userData.studentId,
-            department: userData.department,
-            program: userData.program,
-          },
-        ]);
+      // Attendre que le trigger ait créé le profil (max 2s)
+      let tries = 0;
+      let profileExists = false;
+      while (tries < 10 && !profileExists) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('id')
+          .eq('id', data.user.id);
+        if (profile && profile.length > 0) {
+          profileExists = true;
+        } else {
+          await new Promise(res => setTimeout(res, 1000));
+          tries++;
+        }
+      }
 
-      if (profileError) throw profileError;
+      // Log des valeurs envoyées à l'update
+      console.log('Tentative update profil', {
+        id: data.user.id,
+        firstname: userData.firstname,
+        lastname: userData.lastname,
+        studentid: userData.studentid,
+        department: userData.department,
+        program: userData.program,
+      });
+
+      // Met à jour le profil avec les vraies infos
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          firstname: userData.firstname,
+          lastname: userData.lastname,
+          studentid: userData.studentid,
+          department: userData.department,
+          program: userData.program,
+        })
+        .eq('id', data.user.id);
+
+      if (updateError) {
+        console.error('Erreur update profil:', updateError);
+        throw updateError;
+      } else {
+        console.log('Profil mis à jour avec succès');
+        // Rafraîchir le contexte utilisateur
+        await fetchUserProfile(data.user.id);
+      }
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Users, CreditCard, DollarSign, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 
 const AdminDashboard: React.FC = () => {
@@ -163,6 +164,14 @@ const AdminDashboard: React.FC = () => {
               <AlertCircle className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center justify-center">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Support utilisateurs</h3>
+          <p className="text-gray-500 mb-4 text-center">Consultez et répondez aux messages de support envoyés par les étudiants.</p>
+          <Link to="/admin/support" className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Voir les messages</Link>
         </div>
       </div>
 

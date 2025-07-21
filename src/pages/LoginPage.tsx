@@ -6,9 +6,9 @@ const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [studentId, setStudentId] = useState('');
+  const [firstname, setFirstName] = useState('');
+  const [lastname, setLastName] = useState('');
+  const [studentid, setStudentId] = useState('');
   const [department, setDepartment] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,9 +27,9 @@ const LoginPage: React.FC = () => {
         navigate('/dashboard');
       } else {
         await signUp(email, password, {
-          firstName,
-          lastName,
-          studentId,
+          firstname,
+          lastname,
+          studentid,
           department,
         });
         navigate('/dashboard');
@@ -94,7 +94,7 @@ const LoginPage: React.FC = () => {
                     <input
                       id="firstName"
                       type="text"
-                      value={firstName}
+                      value={firstname}
                       onChange={(e) => setFirstName(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
                       placeholder="Votre prénom"
@@ -108,7 +108,7 @@ const LoginPage: React.FC = () => {
                     <input
                       id="lastName"
                       type="text"
-                      value={lastName}
+                      value={lastname}
                       onChange={(e) => setLastName(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
                       placeholder="Votre nom"
@@ -124,7 +124,7 @@ const LoginPage: React.FC = () => {
                   <input
                     id="studentId"
                     type="text"
-                    value={studentId}
+                    value={studentid}
                     onChange={(e) => setStudentId(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50"
                     placeholder="Ex: 2101206"
