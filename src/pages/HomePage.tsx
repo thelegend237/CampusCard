@@ -252,7 +252,7 @@ const HomePage: React.FC = () => {
       <footer className="bg-gradient-to-tr from-blue-900/95 to-purple-900/95 border-t border-blue-800/40 shadow-2xl mt-2">
         <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center space-x-3">
-            <img src="/public/logo-iut.png" alt="Logo IUT" className="w-12 h-12 object-contain rounded-full shadow-lg border-2 border-blue-400/30" />
+            <img src="/logo-iut.png" alt="Logo IUT" className="w-12 h-12 object-contain rounded-full shadow-lg border-2 border-blue-400/30" />
             <span className="text-2xl font-extrabold text-blue-100 tracking-wide drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">CampusCard</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-4 text-blue-200 text-sm font-medium">

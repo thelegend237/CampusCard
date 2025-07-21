@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<{ mobile?: boolean }> = ({ mobile = false }) => {
   const { user, signOut } = useAuth();
 
   const studentNavItems = [
@@ -43,7 +43,7 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-gray-900 text-white min-h-screen">
+    <aside className={`${mobile ? '' : 'hidden md:flex'} w-64 bg-gray-900 text-white min-h-screen`} data-testid={mobile ? 'sidebar-mobile' : 'sidebar-desktop'}>
       <div className="p-6">
         <div className="flex items-center space-x-2 mb-8">
           <Link to="/" className="flex items-center space-x-2">

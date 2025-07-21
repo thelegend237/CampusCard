@@ -71,7 +71,7 @@ const Support: React.FC = () => {
         <p className="text-blue-100">Nous sommes là pour vous aider avec vos questions</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Contact Info */}
         <div className="space-y-6">
           <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -162,6 +162,7 @@ const Support: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Votre nom complet"
+                    title="Nom complet"
                   />
                 </div>
                 
@@ -177,6 +178,7 @@ const Support: React.FC = () => {
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="votre@email.com"
+                    title="Email"
                   />
                 </div>
               </div>
@@ -212,6 +214,7 @@ const Support: React.FC = () => {
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Décrivez votre problème ou question..."
+                  title="Message"
                 />
               </div>
 

@@ -95,7 +95,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 w-full max-w-full">
         {/* Payment Status */}
         <div className="bg-gray-800 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between mb-4">
@@ -170,9 +170,9 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Student Card */}
-        <div className="bg-gray-800 rounded-2xl p-6">
+        <div className="bg-gray-800 rounded-2xl p-4 sm:p-6 w-full max-w-full overflow-x-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Votre carte d'étudiant</h2>
             <div className="flex space-x-2">
@@ -234,7 +234,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Card Parameters */}
-        <div className="bg-gray-800 rounded-2xl p-6">
+        <div className="bg-gray-800 rounded-2xl p-4 sm:p-6 w-full max-w-full overflow-x-auto">
           <h2 className="text-xl font-bold text-white mb-6">Paramètres de la carte</h2>
           
           <div className="space-y-6">
@@ -257,7 +257,7 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Personal Info */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Prénom
@@ -267,6 +267,8 @@ const Dashboard: React.FC = () => {
                   value={user?.firstname || ''}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   readOnly
+                  placeholder="Prénom"
+                  title="Prénom"
                 />
               </div>
               <div>
@@ -278,6 +280,8 @@ const Dashboard: React.FC = () => {
                   value={user?.lastname || ''}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   readOnly
+                  placeholder="Nom"
+                  title="Nom"
                 />
               </div>
             </div>
@@ -286,7 +290,7 @@ const Dashboard: React.FC = () => {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Programme d'études
               </label>
-              <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent" title="Programme d'études">
                 <option>Master en Informatique</option>
                 <option>Licence en Génie Civil</option>
                 <option>DUT Électronique</option>
@@ -331,7 +335,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Delivery Information */}
-      <div className="bg-gray-800 rounded-2xl p-6">
+      <div className="bg-gray-800 rounded-2xl p-4 sm:p-6 w-full max-w-full overflow-x-auto">
         <h2 className="text-xl font-bold text-white mb-6">Informations de livraison</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

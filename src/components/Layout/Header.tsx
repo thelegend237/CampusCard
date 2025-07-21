@@ -72,7 +72,7 @@ const helpContent: Record<string, { title: string; description: string; tips: st
   },
 };
 
-const Header: React.FC = () => {
+const Header: React.FC<{ onOpenSidebar?: () => void }> = ({ onOpenSidebar }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
@@ -82,6 +82,7 @@ const Header: React.FC = () => {
   const [helpOpen, setHelpOpen] = React.useState(false);
   const path = location.pathname;
   const help = helpContent[path] || helpContent['/'];
+  const [profileMenuOpen, setProfileMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!user) return;
@@ -127,30 +128,45 @@ const Header: React.FC = () => {
     navigate('/');
   };
 
+  // Fermer le menu profil si on clique en dehors
+  React.useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[title="Profil utilisateur"]') && !target.closest('.profile-popover')) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [profileMenuOpen]);
+
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+    <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 w-full">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          {onOpenSidebar && (
+            <button className="block md:hidden mr-2 p-2 rounded text-gray-700 hover:bg-gray-200" onClick={onOpenSidebar} title="Ouvrir le menu">
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="feather feather-menu"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+          )}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-12 h-12 flex items-center justify-center">
               <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
             </div>
-            <span className="text-xl font-bold text-white">CampusCard</span>
+            <span className="text-xl font-bold text-blue-900">CampusCard</span>
           </Link>
-          </div>
-          
-          <div className="relative">
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
         </div>
-
-        <div className="flex items-center space-x-4">
+        {/* Recherche masquée sur mobile, visible à partir de sm */}
+        <div className="relative hidden sm:block ml-4 flex-1">
+          <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48 sm:w-64"
+          />
+        </div>
+        <div className="flex items-center space-x-2 sm:space-x-4 relative">
           <div className="relative">
             <Bell className="w-6 h-6 text-gray-600 cursor-pointer" onClick={handleBellClick} />
             {unreadCount > 0 && (
@@ -195,19 +211,43 @@ const Header: React.FC = () => {
           
           <div className="flex items-center space-x-2">
             <HelpCircle className="w-6 h-6 text-gray-600 cursor-pointer" onClick={() => setHelpOpen(true)} title="Aide" />
-            <div className="flex items-center space-x-2 cursor-pointer">
+            {/* Profil : icône seule sur mobile, nom visible à partir de sm */}
+            <button
+              className="flex items-center space-x-2 cursor-pointer focus:outline-none"
+              onClick={() => setProfileMenuOpen((v) => !v)}
+              title="Profil utilisateur"
+            >
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">{user?.firstname}</span>
-            </div>
+              <span className="text-sm font-medium text-gray-700 hidden sm:inline">{user?.firstname}</span>
+            </button>
+            {/* Déconnexion visible seulement à partir de sm */}
             <button
               onClick={handleSignOut}
-              className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+              className="p-2 text-gray-600 hover:text-red-600 transition-colors hidden sm:block"
               title="Se déconnecter"
             >
               <LogOut className="w-5 h-5" />
             </button>
+            {/* Menu profil mobile */}
+            {profileMenuOpen && (
+              <div className="absolute right-0 top-12 z-50 bg-white rounded-xl shadow-xl border border-gray-200 w-56 p-4 flex flex-col items-center sm:hidden">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-2">
+                  <User className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-center mb-2">
+                  <div className="font-semibold text-gray-900">{user?.firstname} {user?.lastname}</div>
+                  <div className="text-xs text-gray-500">{user?.email}</div>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full mt-2 bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                >
+                  Se déconnecter
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

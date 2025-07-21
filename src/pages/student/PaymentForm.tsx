@@ -67,6 +67,7 @@ const PaymentForm: React.FC<{ amount: number; cardid?: string; onSuccess?: () =>
           value={method}
           onChange={e => setMethod(e.target.value as 'card' | 'mtn' | 'orange')}
           className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600"
+          title="Méthode de paiement"
         >
           <option value="card">Carte bancaire</option>
           <option value="mtn">Mobile Money MTN</option>
@@ -77,20 +78,20 @@ const PaymentForm: React.FC<{ amount: number; cardid?: string; onSuccess?: () =>
         <>
           <div>
             <label className="block text-sm text-gray-300 mb-1">Nom sur la carte</label>
-            <input type="text" name="cardName" value={form.cardName} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'card'} />
+            <input type="text" name="cardName" value={form.cardName} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'card'} placeholder="Nom sur la carte" title="Nom sur la carte" />
           </div>
           <div>
             <label className="block text-sm text-gray-300 mb-1">Numéro de carte</label>
-            <input type="text" name="cardNumber" value={form.cardNumber} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'card'} maxLength={19} />
+            <input type="text" name="cardNumber" value={form.cardNumber} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'card'} maxLength={19} placeholder="Numéro de carte" title="Numéro de carte" />
           </div>
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-sm text-gray-300 mb-1">Expiration</label>
-              <input type="text" name="expiry" value={form.expiry} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" placeholder="MM/AA" required={method === 'card'} maxLength={5} />
+              <input type="text" name="expiry" value={form.expiry} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" placeholder="MM/AA" required={method === 'card'} maxLength={5} title="Expiration" />
             </div>
             <div className="flex-1">
               <label className="block text-sm text-gray-300 mb-1">CVC</label>
-              <input type="text" name="cvc" value={form.cvc} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'card'} maxLength={4} />
+              <input type="text" name="cvc" value={form.cvc} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'card'} maxLength={4} placeholder="CVC" title="CVC" />
             </div>
           </div>
         </>
@@ -98,7 +99,7 @@ const PaymentForm: React.FC<{ amount: number; cardid?: string; onSuccess?: () =>
       {(method === 'mtn' || method === 'orange') && (
         <div>
           <label className="block text-sm text-gray-300 mb-1">Numéro de téléphone Mobile Money</label>
-          <input type="tel" name="phone" value={form.phone} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'mtn' || method === 'orange'} maxLength={15} />
+          <input type="tel" name="phone" value={form.phone} onChange={handleChange} className="w-full px-3 py-2 rounded bg-gray-700 text-white border border-gray-600" required={method === 'mtn' || method === 'orange'} maxLength={15} placeholder="Numéro de téléphone Mobile Money" title="Numéro de téléphone Mobile Money" />
         </div>
       )}
       <div className="text-white font-semibold">Montant à payer : {amount.toLocaleString()} FCFA</div>

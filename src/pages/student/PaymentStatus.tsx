@@ -139,6 +139,7 @@ const PaymentStatus: React.FC = () => {
                           className="w-full border rounded px-2 py-1"
                           value={filterStatus}
                           onChange={(e) => setFilterStatus(e.target.value)}
+                          title="Statut du paiement"
                         >
                           <option value="">Tous</option>
                           <option value="approved">Payé</option>
@@ -153,6 +154,8 @@ const PaymentStatus: React.FC = () => {
                           className="w-full border rounded px-2 py-1"
                           value={filterDate}
                           onChange={(e) => setFilterDate(e.target.value)}
+                          title="Date de filtre"
+                          placeholder="Date (après)"
                         />
                       </div>
                       <div className="flex justify-end space-x-2">

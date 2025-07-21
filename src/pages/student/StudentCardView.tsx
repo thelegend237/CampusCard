@@ -63,14 +63,14 @@ const StudentCardView: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100 flex-col md:flex-row">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header />
-        <main className="flex-1 flex flex-col items-center justify-center p-8">
+        <main className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8">
       <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Ma carte d'étudiant</h1>
-      <div className="flex flex-col items-center">
-            <div className="relative w-[420px] h-[260px] mb-4">
+      <div className="flex flex-col items-center w-full max-w-full">
+            <div className="relative w-full max-w-[420px] h-[260px] mb-4">
           <div className={`transition-transform duration-700 w-full h-full ${isBack ? 'rotate-y-180' : ''}`}
             style={{ transformStyle: 'preserve-3d' }}>
                 {/* Recto - identique au PDF */}
@@ -92,13 +92,13 @@ const StudentCardView: React.FC = () => {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 6px 16px', background: '#fff', borderBottom: '1px solid #e3eafc' }}>
-                    <img src="/logo-iut.png" alt="Logo" style={{ height: 38 }} crossOrigin="anonymous" />
+                    <img src="/logo-iut.png" alt="Logo IUT" style={{ height: 38 }} crossOrigin="anonymous" />
                     <div style={{ textAlign: 'center', flex: 1 }}>
                       <div style={{ fontWeight: 'bold', fontSize: 15, letterSpacing: 0.5 }}>UNIVERSITE DE DOUALA</div>
                       <div style={{ fontSize: 12, marginTop: 1 }}>INSTITUT UNIVERSITAIRE DE TECHNOLOGIE</div>
                       <div style={{ fontSize: 10, color: '#2563eb', marginTop: 1 }}>CARTE D'ETUDIANT - {new Date().getFullYear()}/{new Date().getFullYear() + 1}</div>
               </div>
-                    <img src="/logo-iut2.png" alt="Logo" style={{ height: 38 }} crossOrigin="anonymous" />
+                    <img src="/logo-iut2.png" alt="Logo IUT 2" style={{ height: 38 }} crossOrigin="anonymous" />
                 </div>
                   <div style={{ display: 'flex', flex: 1, padding: '10px 16px 0 16px', gap: 10, minHeight: 0 }}>
                     <div style={{ flex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 0 }}>
@@ -117,12 +117,12 @@ const StudentCardView: React.FC = () => {
               </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: 6, minWidth: 0 }}>
                       <div style={{ width: 64, height: 72, background: '#e3eafc', borderRadius: 10, overflow: 'hidden', boxShadow: '0 2px 8px rgba(37,99,235,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 2 }}>
-                        {card.user.avatar ? (
-                          <img src={card.user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
+                        {card.user?.avatar ? (
+                          <img src={card.user.avatar} alt="Avatar étudiant" style={{ width: '100%', height: '100%', objectFit: 'cover' }} crossOrigin="anonymous" />
                         ) : ''}
                 </div>
                       {qrDataUrl && (
-                        <img src={qrDataUrl} alt="QR Code" style={{ width: 48, height: 48, borderRadius: 6, background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 2 }} />
+                        <img src={qrDataUrl} alt="QR Code étudiant" style={{ width: 48, height: 48, borderRadius: 6, background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 2 }} />
                       )}
                       <div style={{ fontSize: 10, color: '#2563eb', fontStyle: 'italic', letterSpacing: 0.5, marginTop: 2, textAlign: 'center' }}>Visa Directeur</div>
                 </div>
@@ -152,7 +152,8 @@ const StudentCardView: React.FC = () => {
             setIconAnimated(true);
             setTimeout(() => setIconAnimated(false), 600);
           }}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors mt-2"
+          title="Retourner la carte"
         >
           <ArrowLeftRight
             className={`w-5 h-5 transition-transform duration-500 ${iconAnimated ? 'animate-spin' : ''}`}
@@ -163,6 +164,7 @@ const StudentCardView: React.FC = () => {
               <button
                 onClick={() => generateCardPDF(card)}
                 className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                title="Télécharger ma carte"
               >
                 Télécharger ma carte
               </button>
@@ -183,6 +185,7 @@ const StudentCardView: React.FC = () => {
                   }
                 }}
                 className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"
+                title="Supprimer ma carte"
               >
                 Supprimer ma carte
               </button>
