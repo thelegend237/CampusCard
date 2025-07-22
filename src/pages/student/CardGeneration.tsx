@@ -301,11 +301,11 @@ const CardGeneration: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      name="firstname"
+                          name="firstname"
                       value={formData.firstname}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Prénom"
+                          placeholder="Prénom"
                       title="Prénom"
                     />
                   </div>
@@ -315,95 +315,95 @@ const CardGeneration: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      name="lastname"
+                          name="lastname"
                       value={formData.lastname}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Nom"
+                          placeholder="Nom"
                       title="Nom"
-                    />
-                  </div>
-                </div>
+                        />
+                      </div>
+                    </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Date de naissance
-                    </label>
-                    <input
-                      type="date"
-                      name="dateofbirth"
-                      value={formData.dateofbirth}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="JJ/MM/AAAA"
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Date de naissance
+                        </label>
+                        <input
+                          type="date"
+                          name="dateofbirth"
+                          value={formData.dateofbirth}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="JJ/MM/AAAA"
                       title="Date de naissance"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Lieu de naissance
-                    </label>
-                    <input
-                      type="text"
-                      name="placeofbirth"
-                      value={formData.placeofbirth}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Ville, pays..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Lieu de naissance
+                        </label>
+                        <input
+                          type="text"
+                          name="placeofbirth"
+                          value={formData.placeofbirth}
+                          onChange={handleInputChange}
+                          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Ville, pays..."
                       title="Lieu de naissance"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Numéro étudiant
-                  </label>
-                  <input
-                    type="text"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Numéro étudiant
+              </label>
+              <input
+                type="text"
                     name="studentid"
-                    value={formData.studentid}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="2101206"
+                value={formData.studentid}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="2101206"
                     title="Numéro étudiant"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Département
-                  </label>
-                  <select
-                    name="department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Département
+              </label>
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     title="Département"
-                  >
-                    <option value="">Sélectionnez un département</option>
-                    <option value="Informatique & Réseaux">Informatique & Réseaux</option>
-                    <option value="Génie Civil">Génie Civil</option>
-                    <option value="Électronique">Électronique</option>
-                    <option value="Maintenance Industrielle">Maintenance Industrielle</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Programme d'études
-                  </label>
-                  <select
-                    name="program"
-                    value={formData.program}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Sélectionnez un département</option>
+                <option value="Informatique & Réseaux">Informatique & Réseaux</option>
+                <option value="Génie Civil">Génie Civil</option>
+                <option value="Électronique">Électronique</option>
+                <option value="Maintenance Industrielle">Maintenance Industrielle</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Programme d'études
+              </label>
+              <select
+                name="program"
+                value={formData.program}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     title="Programme d'études"
-                  >
-                    <option value="">Sélectionnez un programme</option>
-                    <option value="Master en Informatique">Master en Informatique</option>
-                    <option value="Licence en Génie Civil">Licence en Génie Civil</option>
-                    <option value="DUT Électronique">DUT Électronique</option>
-                    <option value="BTS Maintenance">BTS Maintenance</option>
-                  </select>
-                </div>
+              >
+                <option value="">Sélectionnez un programme</option>
+                <option value="Master en Informatique">Master en Informatique</option>
+                <option value="Licence en Génie Civil">Licence en Génie Civil</option>
+                <option value="DUT Électronique">DUT Électronique</option>
+                <option value="BTS Maintenance">BTS Maintenance</option>
+              </select>
+            </div>
               </>
             ) : (
               <>
