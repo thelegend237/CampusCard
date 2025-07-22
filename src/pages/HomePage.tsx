@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, ShoppingCart, MapPin, Linkedin, Facebook, Twitter, Phone, Clock} from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
 
 // Ajout du scroll fluide global
 if (typeof window !== 'undefined') {
@@ -11,8 +12,10 @@ if (typeof window !== 'undefined') {
 const glowText = 'drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]';
 
 const HomePage: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
   const handleGetStarted = () => {
     if (user) {
       if (user.role === 'admin') {
@@ -24,6 +27,18 @@ const HomePage: React.FC = () => {
       navigate('/login');
     }
   };
+
+  // Fermer le menu profil si clic en dehors
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [profileMenuOpen]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-purple-900">
@@ -45,13 +60,63 @@ const HomePage: React.FC = () => {
               <a href="#faq" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">❓ FAQ</a>
               <a href="#contact" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">📞 Contact</a>
             </nav>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigate('/login')}
-                className="bg-gradient-to-tr from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform font-semibold border border-white/20 backdrop-blur-md"
-              >
-              {user?.firstname || '😀 User'}
-              </button>
+            <div className="flex items-center space-x-4 relative">
+              {user ? (
+                <>
+                  <button
+                    onClick={() => setProfileMenuOpen((v) => !v)}
+                    className="bg-gradient-to-tr from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform font-semibold border border-white/20 backdrop-blur-md"
+                    title="Profil utilisateur"
+                  >
+                    {user.firstname || '😀 User'}
+                  </button>
+                  {profileMenuOpen && (
+                    <div
+                      ref={popoverRef}
+                      className="absolute right-0 top-12 z-50 bg-white rounded-xl shadow-xl border border-gray-200 w-56 p-4 flex flex-col items-center"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-2">
+                        <span className="text-xl text-white font-bold">{user.firstname?.[0] || '😀'}</span>
+                      </div>
+                      <div className="text-center mb-2">
+                        <div className="font-semibold text-gray-900">{user.firstname} {user.lastname}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+                      <Link
+                        to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
+                        className="w-full mt-2 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
+                        onClick={() => setProfileMenuOpen(false)}
+                      >
+                        Mon dashboard
+                      </Link>
+                      <Link
+                        to="/dashboard/settings"
+                        className="w-full mt-2 bg-gray-200 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors text-center"
+                        onClick={() => setProfileMenuOpen(false)}
+                      >
+                        Mon profil
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          setTimeout(async () => { await signOut(); }, 100);
+                        }}
+                        className="w-full mt-2 bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                      >
+                        Se déconnecter
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="bg-gradient-to-tr from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform font-semibold border border-white/20 backdrop-blur-md"
+                >
+                  😀 User
+                </button>
+              )}
             </div>
           </div>
         </div>
