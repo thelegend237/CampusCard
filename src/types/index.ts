@@ -11,6 +11,9 @@ export interface User {
   phone?: string;
   dateofbirth?: string;
   placeofbirth?: string;
+  matricule?: string; // Nouveau : matricule unique pour l'authentification
+  password_hash?: string; // Nouveau : hash du mot de passe
+  password_changed?: boolean; // Nouveau : si le mot de passe a été changé depuis la création
   created_at: string;
   updated_at?: string;
 }
@@ -32,6 +35,7 @@ export interface Card {
   updated_at?: string;
   dateofbirth?: string;
   placeofbirth?: string;
+  user?: User; // Relation avec l'utilisateur
 }
 
 export interface Payment {
@@ -60,6 +64,10 @@ export interface Notification {
   userid: string;
   title: string;
   message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  read: boolean;
+  created_at: string;
+}
   type: 'info' | 'warning' | 'error' | 'success';
   read: boolean;
   created_at: string;

@@ -16,6 +16,8 @@ CREATE TABLE public.cards (
   qrcode text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  dateofbirth date,
+  placeofbirth text,
   CONSTRAINT cards_pkey PRIMARY KEY (id),
   CONSTRAINT cards_userid_fkey FOREIGN KEY (userid) REFERENCES public.users(id)
 );
@@ -49,9 +51,37 @@ CREATE TABLE public.payments (
   transactionid text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  phone text,
   CONSTRAINT payments_pkey PRIMARY KEY (id),
   CONSTRAINT payments_userid_fkey FOREIGN KEY (userid) REFERENCES public.users(id),
   CONSTRAINT payments_cardid_fkey FOREIGN KEY (cardid) REFERENCES public.cards(id)
+);
+CREATE TABLE public.programs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  code text NOT NULL UNIQUE,
+  department_id uuid NOT NULL,
+  level text NOT NULL CHECK (level = ANY (ARRAY['DUT'::text, 'BTS'::text, 'Licence'::text, 'Master'::text, 'Doctorat'::text])),
+  duration integer NOT NULL DEFAULT 4 CHECK (duration > 0 AND duration <= 12),
+  description text,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT programs_pkey PRIMARY KEY (id),
+  CONSTRAINT programs_department_id_fkey FOREIGN KEY (department_id) REFERENCES public.departments(id)
+);
+CREATE TABLE public.support_messages (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  userid uuid,
+  fullname text NOT NULL,
+  email text NOT NULL,
+  category text NOT NULL,
+  message text NOT NULL,
+  response text,
+  status text DEFAULT 'pending'::text,
+  created_at timestamp with time zone DEFAULT now(),
+  answered_at timestamp with time zone,
+  CONSTRAINT support_messages_pkey PRIMARY KEY (id),
+  CONSTRAINT support_messages_userid_fkey FOREIGN KEY (userid) REFERENCES public.users(id)
 );
 CREATE TABLE public.users (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -59,7 +89,7 @@ CREATE TABLE public.users (
   role text NOT NULL DEFAULT 'student'::text CHECK (role = ANY (ARRAY['student'::text, 'admin'::text])),
   firstname text NOT NULL,
   lastname text NOT NULL,
-  studentid text,
+  studentid text UNIQUE,
   department text,
   program text,
   avatar text,
@@ -67,5 +97,10 @@ CREATE TABLE public.users (
   dateofbirth date,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  placeofbirth text,
+  matricule character varying UNIQUE,
+  password_hash character varying,
+  password_changed boolean DEFAULT false,
+  password_plain character varying,
   CONSTRAINT users_pkey PRIMARY KEY (id)
 );

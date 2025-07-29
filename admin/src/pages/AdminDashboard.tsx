@@ -3,6 +3,13 @@ import { supabase } from '../../lib/supabase';
 import { Users, CreditCard, DollarSign, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+interface Activity {
+  id: string;
+  type: 'card' | 'payment';
+  message: string;
+  time: string;
+  created_at: string;
+}
 
 const AdminDashboard: React.FC = () => {
   const [stats, setStats] = useState({
@@ -15,7 +22,7 @@ const AdminDashboard: React.FC = () => {
     approvedPayments: 0,
     revenue: 0
   });
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [recentActivity, setRecentActivity] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,6 +31,8 @@ const AdminDashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
+      console.log('🔄 Début du chargement des données du dashboard...');
+      
       // Fetch statistics
       const [usersResult, cardsResult, paymentsResult] = await Promise.all([
         supabase.from('users').select('*'),
@@ -31,15 +40,25 @@ const AdminDashboard: React.FC = () => {
         supabase.from('payments').select('*')
       ]);
 
+      console.log('📊 Résultats des requêtes:');
+      console.log('Users:', usersResult);
+      console.log('Cards:', cardsResult);
+      console.log('Payments:', paymentsResult);
+
       const users = usersResult.data || [];
       const cards = cardsResult.data || [];
       const payments = paymentsResult.data || [];
 
+      console.log('📈 Données extraites:');
+      console.log('Users count:', users.length);
+      console.log('Cards count:', cards.length);
+      console.log('Payments count:', payments.length);
+
       const totalRevenue = payments
         .filter(p => p.status === 'approved')
-        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+        .reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
 
-      setStats({
+      const newStats = {
         totalStudents: users.filter(u => u.role === 'student').length,
         totalCards: cards.length,
         totalPayments: payments.length,
@@ -48,9 +67,12 @@ const AdminDashboard: React.FC = () => {
         pendingPayments: payments.filter(p => p.status === 'pending').length,
         approvedPayments: payments.filter(p => p.status === 'approved').length,
         revenue: totalRevenue
-      });
+      };
 
-      function getRelativeTime(dateString) {
+      console.log('📊 Statistiques calculées:', newStats);
+      setStats(newStats);
+
+      function getRelativeTime(dateString: string): string {
         const now = new Date();
         const date = new Date(dateString);
         const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -61,37 +83,40 @@ const AdminDashboard: React.FC = () => {
       }
 
       // Récupération des activités récentes réelles (cartes et paiements)
-      const recentCards = cards
+      const recentCards: Activity[] = cards
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5)
         .map((card) => ({
           id: card.id,
-          type: 'card',
+          type: 'card' as const,
           message:
             card.status === 'approved'
               ? `Carte approuvée - ${card.firstname || card.firstName} ${card.lastname || card.lastName}`
               : `Nouvelle demande de carte - ${card.firstname || card.firstName} ${card.lastname || card.lastName}`,
-          time: getRelativeTime(card.created_at)
+          time: getRelativeTime(card.created_at),
+          created_at: card.created_at
         }));
 
-      const recentPayments = payments
+      const recentPayments: Activity[] = payments
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5)
         .map((payment) => ({
           id: payment.id,
-          type: 'payment',
+          type: 'payment' as const,
           message:
             payment.status === 'approved'
-              ? `Paiement approuvé - ${parseFloat(payment.amount).toLocaleString()} FCFA`
-              : `Nouveau paiement - ${parseFloat(payment.amount).toLocaleString()} FCFA`,
-          time: getRelativeTime(payment.created_at)
+              ? `Paiement approuvé - ${parseFloat(payment.amount || '0').toLocaleString()} FCFA`
+              : `Nouveau paiement - ${parseFloat(payment.amount || '0').toLocaleString()} FCFA`,
+          time: getRelativeTime(payment.created_at),
+          created_at: payment.created_at
         }));
 
       // Fusionner et trier les activités récentes par date
       const allActivities = [...recentCards, ...recentPayments].sort(
-        (a, b) => new Date(b.timeRaw || b.created_at).getTime() - new Date(a.timeRaw || a.created_at).getTime()
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
+      console.log('📅 Activités récentes:', allActivities);
       setRecentActivity(allActivities.slice(0, 6));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -112,8 +137,23 @@ const AdminDashboard: React.FC = () => {
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
-        <h1 className="text-2xl font-bold mb-2">Tableau de bord Admin</h1>
-        <p className="text-blue-100">Vue d'ensemble de l'activité du système</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Tableau de bord Admin</h1>
+            <p className="text-blue-100">Vue d'ensemble de l'activité du système</p>
+          </div>
+          <button 
+            onClick={fetchDashboardData}
+            disabled={loading}
+            className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg font-medium transition-all flex items-center space-x-2 disabled:opacity-50"
+            title="Rafraîchir les données"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>{loading ? 'Chargement...' : 'Rafraîchir'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
@@ -202,6 +242,46 @@ const AdminDashboard: React.FC = () => {
         {/* Status Overview */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <h2 className="text-xl font-bold text-gray-900 mb-6">État des demandes</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <CreditCard className="w-5 h-5 text-blue-600" />
+                <span className="font-medium text-gray-900">Cartes en attente</span>
+              </div>
+              <span className="text-blue-600 font-bold">{stats.pendingCards}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="font-medium text-gray-900">Cartes approuvées</span>
+              </div>
+              <span className="text-green-600 font-bold">{stats.approvedCards}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <DollarSign className="w-5 h-5 text-yellow-600" />
+                <span className="font-medium text-gray-900">Paiements en attente</span>
+              </div>
+              <span className="text-yellow-600 font-bold">{stats.pendingPayments}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="w-5 h-5 text-purple-600" />
+                <span className="font-medium text-gray-900">Paiements approuvés</span>
+              </div>
+              <span className="text-purple-600 font-bold">{stats.approvedPayments}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center space-x-3">

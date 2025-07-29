@@ -10,8 +10,34 @@ export interface User {
   avatar?: string;
   phone?: string;
   dateofbirth?: string;
+  placeofbirth?: string;
+  matricule?: string; // Nouveau : matricule unique pour l'authentification
+  password_hash?: string; // Nouveau : hash du mot de passe
+  password_changed?: boolean; // Nouveau : si le mot de passe a été changé depuis la création
+  password_plain?: string; // Nouveau : mot de passe en clair temporaire (pour l'admin)
   created_at: string;
   updated_at: string;
+}
+
+export interface Department {
+  id: string;
+  name: string;
+  code: string;
+  programs: string[];
+  created_at: string;
+}
+
+export interface Program {
+  id: string;
+  name: string;
+  code: string;
+  department_id: string;
+  level: 'DUT' | 'BTS' | 'Licence' | 'Master' | 'Doctorat';
+  duration: number;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  department?: Department; // Pour les jointures
 }
 
 export interface Card {
@@ -54,4 +80,56 @@ export interface Notification {
   type: 'info' | 'warning' | 'error' | 'success';
   read: boolean;
   created_at: string;
+}
+
+export interface SupportMessage {
+  id: string;
+  userid: string;
+  fullname: string;
+  email: string;
+  category: string;
+  message: string;
+  response?: string;
+  status: 'pending' | 'answered' | 'closed';
+  created_at: string;
+  answered_at?: string;
+} 
+  users: User; // For joins
+}
+
+export interface Payment {
+  id: string;
+  userid: string;
+  cardid?: string;
+  amount: number;
+  description: string;
+  status: 'pending' | 'approved' | 'rejected';
+  paymentmethod?: string;
+  transactionid?: string;
+  created_at: string;
+  updated_at: string;
+  users: User; // For joins
+}
+
+export interface Notification {
+  id: string;
+  userid: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  read: boolean;
+  created_at: string;
+}
+
+export interface SupportMessage {
+  id: string;
+  userid: string;
+  fullname: string;
+  email: string;
+  category: string;
+  message: string;
+  response?: string;
+  status: 'pending' | 'answered' | 'closed';
+  created_at: string;
+  answered_at?: string;
 } 

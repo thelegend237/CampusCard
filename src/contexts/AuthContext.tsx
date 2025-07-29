@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
+import { authenticateByMatricule } from '../lib/matriculeAuth';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithMatricule: (matricule: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -84,6 +86,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (error) throw error;
   };
 
+  const signInWithMatricule = async (matricule: string, password: string) => {
+    const { user, error } = await authenticateByMatricule(matricule, password);
+    if (error) throw new Error(error);
+    if (user) {
+      setUser(user);
+      setLoading(false);
+    } else {
+      throw new Error('Authentification échouée');
+    }
+  };
+
   const signUp = async (email: string, password: string, userData: Partial<User>) => {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
@@ -144,7 +157,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signInWithMatricule, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
