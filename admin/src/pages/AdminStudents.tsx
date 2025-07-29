@@ -1,8 +1,643 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { supabase } from '../lib/supabase';
 import { User, Notification, Program, Department } from '../types';
 import { Search, Plus, Edit, Trash2, Eye, Mail, X, Key, RefreshCw, Download } from 'lucide-react';
 import { createStudentAccount, updateStudentAccount, changeStudentPassword, resetStudentPassword, checkMatriculeExists } from '../lib/matriculeAuth';
+
+// Wizard Step 1: Création du compte Auth (inchangé)
+interface StudentWizardStep1Props {
+  onSuccess: (userId: string, email: string, password: string) => void;
+  onCancel: () => void;
+}
+
+const StudentWizardStep1: React.FC<StudentWizardStep1Props> = ({ onSuccess, onCancel }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleCreate = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('http://localhost:4000/api/create-student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Erreur lors de la création');
+      onSuccess(result.user.id, email, password);
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la création');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleCreate} className="space-y-6">
+      <div className="text-center mb-6">
+        <p className="text-gray-600">Créez d'abord le compte d'authentification de l'étudiant</p>
+      </div>
+      
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <span className="text-red-500">⚠️</span>
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+      
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+          <input 
+            type="email" 
+            placeholder="exemple@email.com" 
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+            title="Adresse email de l'étudiant"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe temporaire *</label>
+          <input 
+            type="password" 
+            placeholder="Mot de passe temporaire" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+            title="Mot de passe temporaire pour l'étape 1"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Ce mot de passe sera remplacé par un mot de passe généré automatiquement à l'étape suivante.
+          </p>
+        </div>
+      </div>
+      
+      <div className="flex justify-between pt-6 border-t border-gray-200">
+        <button 
+          type="button" 
+          onClick={onCancel} 
+          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+        >
+          Annuler
+        </button>
+        <div className="flex items-center space-x-3">
+          <span className="text-sm text-gray-500">
+            Étape 1 sur 3
+          </span>
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center space-x-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Création...</span>
+              </>
+            ) : (
+              <>
+                <span>Créer le compte</span>
+                <span>→</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+};
+
+// Wizard Step 2: Profil étudiant complet avec génération mot de passe
+interface StudentWizardStep2Props {
+  userId: string;
+  email: string;
+  onSuccess: (studentData: any) => void;
+  onCancel: () => void;
+}
+
+const StudentWizardStep2: React.FC<StudentWizardStep2Props> = ({ userId, email, onSuccess, onCancel }) => {
+  const [formData, setFormData] = useState<Partial<User>>({ 
+    email,
+    role: 'student'
+  });
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [loading, setLoading] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  // Charger les départements et programmes au montage du composant
+  useEffect(() => {
+    fetchDepartments();
+    fetchPrograms();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      setDepartments(data || []);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    }
+  };
+
+  const fetchPrograms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('programs')
+        .select(`
+          *,
+          department:departments(name, code)
+        `)
+        .order('name');
+      if (error) throw error;
+      setPrograms(data || []);
+    } catch (error) {
+      console.error('Error fetching programs:', error);
+    }
+  };
+
+  // Fonction pour filtrer les programmes par département
+  const getProgramsByDepartment = (departmentName: string) => {
+    return programs.filter(program => 
+      program.department?.name === departmentName
+    );
+  };
+
+  const handleFormChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (formErrors && typeof name === 'string' && formErrors[name]) setFormErrors(prev => ({ ...prev, [name]: '' }));
+    
+    // Générer automatiquement le mot de passe quand le matricule change
+    if (name === 'matricule' && value) {
+      const newPassword = generatePasswordFromMatricule(value);
+      setGeneratedPassword(newPassword);
+    }
+
+    // Réinitialiser le programme si le département change
+    if (name === 'department') {
+      setFormData(prev => ({ ...prev, program: '' }));
+    }
+  };
+
+  // Fonction pour générer un mot de passe basé sur le matricule
+  const generatePasswordFromMatricule = (matricule: string): string => {
+    // Format: matricule + année actuelle + caractères spéciaux
+    const currentYear = new Date().getFullYear();
+    const specialChars = ['@', '#', '$', '!'];
+    const randomChar = specialChars[Math.floor(Math.random() * specialChars.length)];
+    return `${matricule}${currentYear}${randomChar}`;
+  };
+
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!formData.firstname?.toString().trim()) errors.firstname = 'Le prénom est requis';
+    if (!formData.lastname?.toString().trim()) errors.lastname = 'Le nom est requis';
+    if (!formData.matricule?.toString().trim()) errors.matricule = 'Le matricule est requis';
+    if (!formData.department?.toString().trim()) errors.department = 'Le département est requis';
+    if (!formData.program?.toString().trim()) errors.program = 'Le programme est requis';
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSave = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+    setLoading(true);
+    try {
+      // Hasher le mot de passe généré
+      const encoder = new TextEncoder();
+      const data = encoder.encode(generatedPassword);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const passwordHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      
+      const studentData = {
+        ...formData,
+        id: userId, // Ajouter l'ID de l'utilisateur
+        password_hash: passwordHash,
+        password_plain: generatedPassword,
+        password_changed: false,
+      };
+      
+      onSuccess(studentData);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Erreur lors de l\'enregistrement';
+      setFormErrors({ global: errorMsg });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSave} className="space-y-4">
+      <div className="text-center mb-6">
+        <p className="text-gray-600">Remplissez les informations complètes de l'étudiant</p>
+      </div>
+      {formErrors.global && <div className="text-red-600">{formErrors.global}</div>}
+      
+      {/* Informations de base */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-blue-700 border-b border-gray-200 pb-2">Informations académiques</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Matricule *</label>
+            <input 
+              type="text" 
+              name="matricule" 
+              placeholder="Ex: Test016" 
+              value={formData.matricule?.toString() || ''} 
+              onChange={handleFormChange} 
+              required 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              title="Matricule unique de l'étudiant"
+            />
+            {formErrors.matricule && <p className="text-red-500 text-xs mt-1">{formErrors.matricule}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">ID Étudiant</label>
+            <input 
+              type="text" 
+              name="studentid" 
+              placeholder="ID optionnel" 
+              value={formData.studentid?.toString() || ''} 
+              onChange={handleFormChange} 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              title="Identifiant étudiant optionnel"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-blue-700 border-b border-gray-200 pb-2">Informations personnelles</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+            <input 
+              type="text" 
+              name="firstname" 
+              placeholder="Prénom de l'étudiant" 
+              value={formData.firstname?.toString() || ''} 
+              onChange={handleFormChange} 
+              required 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              title="Prénom de l'étudiant"
+            />
+            {formErrors.firstname && <p className="text-red-500 text-xs mt-1">{formErrors.firstname}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+            <input 
+              type="text" 
+              name="lastname" 
+              placeholder="Nom de l'étudiant" 
+              value={formData.lastname?.toString() || ''} 
+              onChange={handleFormChange} 
+              required 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              title="Nom de l'étudiant"
+            />
+            {formErrors.lastname && <p className="text-red-500 text-xs mt-1">{formErrors.lastname}</p>}
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-blue-700 border-b border-gray-200 pb-2">Formation</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Département *</label>
+            <select 
+              name="department" 
+              value={formData.department?.toString() || ''} 
+              onChange={handleFormChange} 
+              required 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              title="Sélectionner le département"
+            >
+              <option value="">Sélectionnez un département</option>
+              {departments.map(department => (
+                <option key={department.id} value={department.name}>{department.name}</option>
+              ))}
+            </select>
+            {formErrors.department && <p className="text-red-500 text-xs mt-1">{formErrors.department}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Programme *</label>
+            <select 
+              name="program" 
+              value={formData.program?.toString() || ''} 
+              onChange={handleFormChange} 
+              required 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              title="Sélectionner le programme"
+              disabled={!formData.department}
+            >
+              <option value="">
+                {!formData.department ? 'Sélectionnez d\'abord un département' : 'Sélectionnez un programme'}
+              </option>
+              {formData.department && getProgramsByDepartment(formData.department).map(program => (
+                <option key={program.id} value={program.id}>{program.name} ({program.level})</option>
+              ))}
+            </select>
+            {formErrors.program && <p className="text-red-500 text-xs mt-1">{formErrors.program}</p>}
+          </div>
+        </div>
+      </div>
+      
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-blue-700 border-b border-gray-200 pb-2">Informations supplémentaires</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
+            <input 
+              type="date" 
+              name="dateofbirth" 
+              value={formData.dateofbirth?.toString() || ''} 
+              onChange={handleFormChange} 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              title="Date de naissance de l'étudiant"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Lieu de naissance</label>
+            <input 
+              type="text" 
+              name="placeofbirth" 
+              placeholder="Ville de naissance" 
+              value={formData.placeofbirth?.toString() || ''} 
+              onChange={handleFormChange} 
+              className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              title="Lieu de naissance de l'étudiant"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+          <input 
+            type="tel" 
+            name="phone" 
+            placeholder="Numéro de téléphone" 
+            value={formData.phone?.toString() || ''} 
+            onChange={handleFormChange} 
+            className="w-full px-4 py-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+            title="Numéro de téléphone de l'étudiant"
+          />
+        </div>
+      </div>
+      
+      {/* Mot de passe généré */}
+      {generatedPassword && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-green-700 border-b border-gray-200 pb-2">Mot de passe généré</h3>
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-green-800">Mot de passe généré automatiquement</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label className="sr-only">Mot de passe généré</label>
+              <input 
+                type="text" 
+                value={generatedPassword} 
+                readOnly 
+                className="flex-1 px-3 py-2 bg-white border border-green-300 rounded font-mono text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent" 
+                title="Mot de passe généré automatiquement"
+                placeholder="Mot de passe généré"
+              />
+              <button 
+                type="button" 
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedPassword);
+                  // Feedback visuel
+                  const btn = event?.target as HTMLButtonElement;
+                  if (btn) {
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Copié !';
+                    btn.className = 'px-3 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors';
+                    setTimeout(() => {
+                      btn.textContent = originalText;
+                      btn.className = 'px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors';
+                    }, 2000);
+                  }
+                }}
+                className="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+                title="Copier le mot de passe"
+              >
+                Copier
+              </button>
+            </div>
+            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-sm text-yellow-800">
+                <strong>⚠️ Important :</strong> Notez ce mot de passe et communiquez-le à l'étudiant. 
+                Il pourra le changer après sa première connexion.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex justify-between pt-6 border-t border-gray-200">
+        <button 
+          type="button" 
+          onClick={onCancel} 
+          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+        >
+          Annuler
+        </button>
+        <div className="flex items-center space-x-3">
+          <span className="text-sm text-gray-500">
+            Étape 2 sur 3
+          </span>
+          <button 
+            type="submit" 
+            disabled={loading || !generatedPassword} 
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center space-x-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Enregistrement...</span>
+              </>
+            ) : (
+              <>
+                <span>Continuer</span>
+                <span>→</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+};
+
+// Wizard Step 3: Validation des données
+interface StudentWizardStep3Props {
+  studentData: any;
+  onFinish: () => void;
+  onBack: () => void;
+}
+
+const StudentWizardStep3: React.FC<StudentWizardStep3Props> = ({ studentData, onFinish, onBack }) => {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  const handleFinalSave = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update(studentData)
+        .eq('id', studentData.id);
+        
+      if (error) throw error;
+      
+      setSuccess(true);
+      setTimeout(() => {
+        onFinish();
+      }, 2000);
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde finale:', err);
+      alert('Erreur lors de la sauvegarde finale');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="text-center space-y-4">
+        <div className="text-green-600 text-6xl">✅</div>
+        <h2 className="text-xl font-bold text-green-600">Étudiant créé avec succès !</h2>
+        <p className="text-gray-600">L'étudiant peut maintenant se connecter avec son matricule et le mot de passe généré.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <p className="text-gray-600">Vérifiez les informations avant de créer l'étudiant</p>
+      </div>
+      
+      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+        <h3 className="font-semibold text-lg">Récapitulatif de l'étudiant :</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Matricule</label>
+            <p className="text-lg font-semibold">{studentData.matricule}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Nom complet</label>
+            <p className="text-lg font-semibold">{studentData.firstname} {studentData.lastname}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <p className="text-lg">{studentData.email}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Département</label>
+            <p className="text-lg">{studentData.department}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Programme</label>
+            <p className="text-lg">{studentData.program}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Mot de passe généré</label>
+            <p className="text-lg font-mono bg-yellow-100 px-2 py-1 rounded">{studentData.password_plain}</p>
+          </div>
+        </div>
+        
+        {studentData.phone && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Téléphone</label>
+            <p className="text-lg">{studentData.phone}</p>
+          </div>
+        )}
+        
+        {(studentData.dateofbirth || studentData.placeofbirth) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {studentData.dateofbirth && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date de naissance</label>
+                <p className="text-lg">{studentData.dateofbirth}</p>
+              </div>
+            )}
+            {studentData.placeofbirth && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Lieu de naissance</label>
+                <p className="text-lg">{studentData.placeofbirth}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <h3 className="font-semibold text-yellow-800 mb-2">⚠️ Important :</h3>
+        <p className="text-yellow-700 text-sm">
+          Le mot de passe généré est : <strong className="font-mono">{studentData.password_plain}</strong>
+        </p>
+        <p className="text-yellow-700 text-sm mt-2">
+          Notez ce mot de passe et communiquez-le à l'étudiant. Il pourra le changer après sa première connexion.
+        </p>
+      </div>
+      
+      <div className="flex justify-between pt-6 border-t border-gray-200">
+        <button 
+          type="button" 
+          onClick={onBack} 
+          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium flex items-center space-x-2"
+        >
+          <span>←</span>
+          <span>Retour</span>
+        </button>
+        <div className="flex items-center space-x-3">
+          <span className="text-sm text-gray-500">
+            Étape 3 sur 3
+          </span>
+          <button 
+            type="button" 
+            onClick={handleFinalSave} 
+            disabled={loading} 
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center space-x-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Sauvegarde...</span>
+              </>
+            ) : (
+              <>
+                <span>✅</span>
+                <span>Créer l'étudiant</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminStudents: React.FC = () => {
   const [students, setStudents] = useState<User[]>([]);
@@ -27,6 +662,13 @@ const AdminStudents: React.FC = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [wizardUserId, setWizardUserId] = useState('');
+  const [wizardEmail, setWizardEmail] = useState('');
+  const [wizardPassword, setWizardPassword] = useState('');
+  const [wizardStudentData, setWizardStudentData] = useState<any>(null);
+
   useEffect(() => {
     fetchStudents();
     fetchPrograms();
@@ -42,6 +684,23 @@ const AdminStudents: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      
+      // Log pour déboguer
+      console.log('🔍 Étudiants récupérés:', data);
+      if (data && data.length > 0) {
+        data.forEach((student, index) => {
+          console.log(`📋 Étudiant ${index + 1}:`, {
+            id: student.id,
+            email: student.email,
+            matricule: student.matricule,
+            password_hash: student.password_hash ? 'Présent' : 'Manquant',
+            password_plain: student.password_plain ? 'Présent' : 'Manquant',
+            firstname: student.firstname,
+            lastname: student.lastname
+          });
+        });
+      }
+      
       setStudents(data || []);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -485,6 +1144,93 @@ const AdminStudents: React.FC = () => {
     );
   }
 
+  if (wizardOpen) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[85vh] overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-gray-200">
+            {/* Barre de progression */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Création d'un étudiant</h2>
+                <button 
+                  onClick={() => setWizardOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Fermer le wizard"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <div className="flex items-center space-x-2">
+                {[1, 2, 3].map((step) => (
+                  <div key={step} className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      wizardStep >= step 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-200 text-gray-500'
+                    }`}>
+                      {wizardStep > step ? '✓' : step}
+                    </div>
+                    {step < 3 && (
+                      <div className={`w-12 h-1 mx-2 ${
+                        wizardStep > step ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <span>Compte Auth</span>
+                <span>Profil</span>
+                <span>Validation</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6">
+          {wizardStep === 1 && (
+            <StudentWizardStep1
+              onSuccess={(id, email, password) => {
+                setWizardUserId(id);
+                setWizardEmail(email);
+                setWizardPassword(password);
+                setWizardStep(2);
+              }}
+              onCancel={() => setWizardOpen(false)}
+            />
+          )}
+          {wizardStep === 2 && (
+            <StudentWizardStep2
+              userId={wizardUserId}
+              email={wizardEmail}
+              onSuccess={(studentData) => {
+                setWizardStudentData(studentData);
+                setWizardStep(3);
+              }}
+              onCancel={() => setWizardOpen(false)}
+            />
+          )}
+          {wizardStep === 3 && (
+            <StudentWizardStep3
+              studentData={wizardStudentData}
+              onFinish={() => {
+                setWizardOpen(false);
+                setWizardStep(1);
+                setWizardUserId('');
+                setWizardEmail('');
+                setWizardPassword('');
+                setWizardStudentData(null);
+                fetchStudents();
+              }}
+              onBack={() => setWizardStep(2)}
+            />
+          )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       {/* Header */}
@@ -495,7 +1241,7 @@ const AdminStudents: React.FC = () => {
             <p className="text-blue-100">Gérez les comptes étudiants et leurs informations</p>
           </div>
           <div className="flex items-center space-x-3">
-            <button
+          <button
               onClick={exportStudentsToCSV}
               className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center space-x-2"
               title="Exporter tous les étudiants en CSV"
@@ -504,7 +1250,7 @@ const AdminStudents: React.FC = () => {
               <span>Exporter CSV</span>
             </button>
           <button
-            onClick={() => openModal('add')}
+            onClick={() => setWizardOpen(true)}
             className="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors flex items-center space-x-2"
           >
             <Plus className="w-5 h-5" />
@@ -601,8 +1347,8 @@ const AdminStudents: React.FC = () => {
                         </div>
                         {student.studentid && (
                           <div className="text-xs text-gray-400">
-                            ID: {student.studentid}
-                          </div>
+                          ID: {student.studentid}
+                        </div>
                         )}
                       </div>
                     </div>
@@ -772,7 +1518,7 @@ const AdminStudents: React.FC = () => {
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Prénom</label>
                       <p className="text-gray-900 font-medium">{selectedStudent.firstname || 'Non renseigné'}</p>
-                    </div>
+                  </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Nom</label>
                       <p className="text-gray-900 font-medium">{selectedStudent.lastname || 'Non renseigné'}</p>
@@ -921,7 +1667,7 @@ const AdminStudents: React.FC = () => {
             {(modal === 'add' || modal === 'edit') && (
               <form onSubmit={modal === 'add' ? handleCreateStudent : handleUpdateStudent} className="space-y-6">
                 {/* Informations personnelles */}
-                <div>
+                    <div>
                   <h3 className="text-lg font-semibold text-blue-700 mb-3 border-b border-gray-200 pb-2">Informations personnelles</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -945,12 +1691,12 @@ const AdminStudents: React.FC = () => {
                                           <div>
                         <label className="block text-sm font-bold text-gray-700 mb-1">URL de l'avatar</label>
                         <input type="url" name="avatar" value={formData.avatar || ''} onChange={handleFormChange} className="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-4 py-2 transition" placeholder="https://example.com/avatar.jpg" title="URL de l'image de profil" />
-                    </div>
+                  </div>
                   </div>
                 </div>
 
                 {/* Informations académiques */}
-                <div>
+                    <div>
                   <h3 className="text-lg font-semibold text-blue-700 mb-3 border-b border-gray-200 pb-2">Informations académiques</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -1025,11 +1771,11 @@ const AdminStudents: React.FC = () => {
             {modal === 'password' && selectedStudent && (
               <form onSubmit={handleChangePassword} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
+                    <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Nouveau mot de passe</label>
                     <input type="password" name="password" value={passwordData.password} onChange={handlePasswordChange} className="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-4 py-2 transition" placeholder="Nouveau mot de passe" />
                     {formErrors.password && <p className="text-red-500 text-xs mt-1">{formErrors.password}</p>}
-                  </div>
+                    </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-1">Confirmer le nouveau mot de passe</label>
                     <input type="password" name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} className="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-4 py-2 transition" placeholder="Confirmer le nouveau mot de passe" />

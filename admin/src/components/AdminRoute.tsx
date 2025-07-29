@@ -19,11 +19,3 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 export default AdminRoute; 
-    return <Navigate to="/admin/login" replace />;
-  }
-  
-  console.log('✅ AdminRoute - Accès autorisé pour admin');
-  return <>{children}</>;
-};
-
-export default AdminRoute; 

@@ -6,8 +6,6 @@ import AdminRoute from './src/components/AdminRoute';
 import AdminLogin from './src/pages/AdminLogin';
 import AdminDashboard from './src/pages/AdminDashboard';
 import AdminCards from './src/pages/AdminCards';
-import AdminPrintCards from './src/pages/AdminPrintCards';
-import AdminPrintCardView from './src/pages/AdminPrintCardView';
 import AdminStudents from './src/pages/AdminStudents';
 import AdminDepartments from './src/pages/AdminDepartments';
 import AdminPayments from './src/pages/AdminPayments';
@@ -39,15 +37,11 @@ function App() {
           {/* Page de connexion admin */}
           <Route path="/admin/login" element={<AdminLogin />} />
           
-          {/* Page d'impression (sans authentification) */}
-          <Route path="/admin/print-card" element={<AdminPrintCardView />} />
-          
           {/* Routes protégées */}
           <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/students" element={<AdminStudents />} />
             <Route path="/admin/cards" element={<AdminCards />} />
-            <Route path="/admin/print-cards" element={<AdminPrintCards />} />
             <Route path="/admin/departments" element={<AdminDepartments />} />
             <Route path="/admin/payments" element={<AdminPayments />} />
             <Route path="/admin/reports" element={<AdminReports />} />

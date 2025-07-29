@@ -144,21 +144,106 @@ Les contributions sont les bienvenues ! Merci de créer une issue ou une pull re
 ## Licence
 MIT 
 
-## Déploiement sur Vercel
+## 🚀 Déploiement sur Vercel
 
-Ce projet est prêt pour un déploiement sur [Vercel](https://vercel.com/).
+### Prérequis
+- Compte GitHub/GitLab/Bitbucket
+- Compte Vercel
+- Projet Supabase configuré
 
-### Étapes :
-1. Poussez votre code sur un repository GitHub, GitLab ou Bitbucket.
-2. Connectez-vous sur [vercel.com](https://vercel.com/) et importez votre repository.
-3. Vercel détectera automatiquement Vite et utilisera la commande `npm run build`.
-4. Le dossier de sortie est `dist` (configuré dans `vercel.json`).
-5. Ajoutez vos variables d'environnement (ex : SUPABASE_URL, SUPABASE_ANON_KEY) dans l'onglet "Environment Variables" du dashboard Vercel.
-6. Lancez le déploiement !
+### Étapes de déploiement
 
-Aucune configuration supplémentaire n'est requise pour un projet Vite standard.
+#### 1. Préparation du code
+```bash
+# Vérifier que tout fonctionne localement
+npm run build:check
+npm run build
+```
 
-Pour des besoins avancés (redirections, headers, etc.), modifiez le fichier `vercel.json` à la racine du projet. 
+#### 2. Push sur GitHub
+```bash
+git add .
+git commit -m "Prepare for deployment"
+git push origin main
+```
+
+#### 3. Déploiement sur Vercel
+1. Connectez-vous sur [vercel.com](https://vercel.com/)
+2. Cliquez sur "New Project"
+3. Importez votre repository GitHub
+4. Vercel détectera automatiquement Vite
+
+#### 4. Configuration des variables d'environnement
+Dans le dashboard Vercel, allez dans **Settings > Environment Variables** et ajoutez :
+
+```
+VITE_SUPABASE_URL=https://votre-projet.supabase.co
+VITE_SUPABASE_ANON_KEY=votre_cle_anon_supabase
+```
+
+#### 5. Configuration du build
+- **Framework Preset** : Vite
+- **Build Command** : `npm run build`
+- **Output Directory** : `dist`
+- **Install Command** : `npm install`
+
+#### 6. Déploiement
+Cliquez sur "Deploy" et attendez la fin du build.
+
+### Configuration post-déploiement
+
+#### Créer un compte admin
+1. Allez dans votre projet Supabase
+2. **Authentication > Users > Add user**
+3. Créez un utilisateur admin :
+   - Email : `admin@votre-domaine.com`
+   - Password : `MotDePasseSecurise123!`
+   - ✅ Email confirmed
+
+4. Dans **SQL Editor**, exécutez :
+```sql
+INSERT INTO users (
+  id, 
+  email, 
+  role, 
+  firstname, 
+  lastname, 
+  created_at
+) VALUES (
+  'UUID_DE_L_UTILISATEUR_AUTH', -- Remplacez par l'ID de l'utilisateur créé
+  'admin@votre-domaine.com',
+  'admin',
+  'Admin',
+  'Principal',
+  NOW()
+);
+```
+
+#### Accès admin
+- URL : `https://votre-domaine.vercel.app/admin/login`
+- Email : `admin@votre-domaine.com`
+- Mot de passe : `MotDePasseSecurise123!`
+
+### URLs importantes
+- **Frontend étudiant** : `https://votre-domaine.vercel.app/`
+- **Admin** : `https://votre-domaine.vercel.app/admin/dashboard`
+- **Connexion admin** : `https://votre-domaine.vercel.app/admin/login`
+
+### Dépannage
+
+#### Erreur de build
+- Vérifiez que toutes les variables d'environnement sont configurées
+- Vérifiez que le projet Supabase est actif
+- Consultez les logs de build dans Vercel
+
+#### Erreur 404 sur les routes
+- Le fichier `vercel.json` est configuré pour rediriger toutes les routes vers `index.html`
+- Vérifiez que le fichier est bien présent à la racine
+
+#### Problème d'authentification
+- Vérifiez que les clés Supabase sont correctes
+- Vérifiez que les policies RLS sont appliquées
+- Vérifiez que le compte admin a le bon rôle
 
 ## Fonctionnement du menu profil utilisateur
 

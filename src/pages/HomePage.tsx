@@ -224,7 +224,7 @@ const HomePage: React.FC = () => {
           <div className="grid md:grid-cols-5 gap-6">
             <div className={`bg-white/90 backdrop-blur-md border border-blue-100 shadow-lg rounded-3xl p-6 flex flex-col items-center text-center hover:scale-105 transition-transform duration-300`}> 
               <div className="w-12 h-12 mb-4 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl shadow-lg">1</div>
-              <span className="font-semibold text-blue-600">Créez votre compte étudiant</span>
+              <span className="font-semibold text-blue-600">Connectez-vous à votre compte étudiant</span>
               <span className="text-gray-700 text-sm mt-2">sur la plateforme CampusCard.</span>
             </div>
             <div className={`bg-white/90 backdrop-blur-md border border-blue-100 shadow-lg rounded-3xl p-6 flex flex-col items-center text-center hover:scale-105 transition-transform duration-300`}> 
@@ -268,7 +268,7 @@ const HomePage: React.FC = () => {
             </div>
             <div className={`bg-white/90 backdrop-blur-md border border-purple-100 shadow-lg rounded-3xl p-8 flex flex-col gap-2 hover:scale-105 transition-transform duration-300`}> 
               <span className="font-semibold text-blue-700 text-lg">Quels documents dois-je fournir ?</span>
-              <span className="text-gray-700">Une photo d'identité récente et vos informations personnelles (nom, prénom, date de naissance, etc.).</span>
+              <span className="text-gray-700">Une photo d'identité récente .</span>
             </div>
             <div className={`bg-white/90 backdrop-blur-md border border-purple-100 shadow-lg rounded-3xl p-8 flex flex-col gap-2 hover:scale-105 transition-transform duration-300`}> 
               <span className="font-semibold text-blue-700 text-lg">Comment récupérer ma carte ?</span>

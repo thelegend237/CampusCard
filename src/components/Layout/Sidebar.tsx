@@ -22,7 +22,7 @@ const Sidebar: React.FC<{ mobile?: boolean }> = ({ mobile = false }) => {
     { path: '/dashboard/payment-status', label: 'État du paiement', icon: DollarSign },
     { path: '/dashboard/card-generation', label: 'Génération de carte', icon: CreditCard },
     { path: '/dashboard/history', label: 'Historique', icon: History },
-    { path: '/dashboard/support', label: 'Support', icon: HelpCircle },
+    { path: '/dashboard/support', label: 'Requêtes', icon: HelpCircle },
     { path: '/dashboard/settings', label: 'Paramètres', icon: Settings },
   ];
 

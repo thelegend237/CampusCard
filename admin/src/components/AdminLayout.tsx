@@ -1,13 +1,12 @@
 import React from 'react';
 import { NavLink, useNavigate, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, DollarSign, Building, FileText, Settings, LogOut, HelpCircle, Printer } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, DollarSign, Building, FileText, Settings, LogOut, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../../src/contexts/AuthContext';
 
 const adminNavItems = [
   { path: '/admin/dashboard', label: 'Tableau de bord', icon: LayoutDashboard },
   { path: '/admin/students', label: 'Étudiants', icon: Users },
   { path: '/admin/cards', label: 'Cartes', icon: CreditCard },
-  { path: '/admin/print-cards', label: 'Impression Cartes', icon: Printer },
   { path: '/admin/payments', label: 'Paiements', icon: DollarSign },
   { path: '/admin/departments', label: 'Départements', icon: Building },
   { path: '/admin/reports', label: 'Rapports', icon: FileText },

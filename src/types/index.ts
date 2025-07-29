@@ -35,7 +35,6 @@ export interface Card {
   updated_at?: string;
   dateofbirth?: string;
   placeofbirth?: string;
-  user?: User; // Relation avec l'utilisateur
 }
 
 export interface Payment {
@@ -68,7 +67,26 @@ export interface Notification {
   read: boolean;
   created_at: string;
 }
-  type: 'info' | 'warning' | 'error' | 'success';
-  read: boolean;
-  created_at: string;
+
+export interface SupportMessage {
+  id: string;
+  userid?: string;
+  fullname: string;
+  email: string;
+  category: 'technical' | 'payment' | 'card' | 'account' | 'general' | 'urgent' | 'bug' | 'feature';
+  message: string;
+  response?: string;
+  status?: string; // Valeur par défaut 'pending' dans la base de données
+  created_at?: string; // Généré automatiquement par la base de données
+  answered_at?: string;
+  subject?: string;
+  priority?: 'low' | 'medium' | 'high' | 'critical'; // Valeur par défaut 'medium' dans la base de données
+  assigned_to?: string;
+  tags?: string[];
+  resolved_at?: string;
+  closed_at?: string;
+  estimated_resolution_time?: string;
+  actual_resolution_time?: string;
+  satisfaction_rating?: number; // Entre 1 et 5
+  internal_notes?: string;
 }

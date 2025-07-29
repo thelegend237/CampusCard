@@ -23,18 +23,13 @@ const StudentCardView: React.FC = () => {
 
   useEffect(() => {
     const fetchCard = async () => {
-      if (!user) {
-        console.log('Aucun utilisateur connecté');
-        return;
-      }
-      console.log('Chargement de la carte pour user.id =', user.id);
+      if (!user) return;
       const { data, error } = await supabase
         .from('cards')
         .select('*, user:userid (firstname, lastname, dateofbirth, placeofbirth, department, program, avatar)')
         .eq('userid', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
-      console.log('Résultat requête carte:', { data, error });
       if (!error && data && data.length > 0) {
         setCard(data[0]);
       }
