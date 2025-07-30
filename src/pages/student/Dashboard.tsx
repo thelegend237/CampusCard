@@ -287,6 +287,7 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">Votre carte d'étudiant</h2>
             <div className="flex space-x-2">
+              {/*
               <button
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 onClick={() => window.location.href = '/settings'}
@@ -301,6 +302,7 @@ const Dashboard: React.FC = () => {
               >
                 Historique
               </button>
+              */}
               {/* 
               <button
                 className="bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-800 transition-colors"
@@ -432,7 +434,12 @@ const Dashboard: React.FC = () => {
             </div>
 
             {/* Notifications */}
-            <div className="space-y-3">
+            {/* 
+              Notifications
+              Cette section permet à l'utilisateur d'activer ou désactiver les notifications par email et SMS.
+              Les boutons sont des interrupteurs (switch) qui modifient l'état local notificationSettings.
+            */}
+            {/* <div className="space-y-3">
               <h3 className="text-sm font-medium text-gray-300">Notifications</h3>
               
               <div className="flex items-center justify-between">
@@ -462,9 +469,13 @@ const Dashboard: React.FC = () => {
                   }`}></span>
                 </button>
               </div>
-            </div>
+            </div> */}
 
             {/* Security */}
+            {/* 
+              Sécurité
+              Cette section permet à l'utilisateur d'activer ou désactiver l'authentification à deux facteurs.
+              Le bouton est un interrupteur (switch) qui modifie l'état local security.
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-gray-300">Sécurité</h3>
               
@@ -474,6 +485,7 @@ const Dashboard: React.FC = () => {
                   <p className="text-xs text-gray-500">Protégez votre compte avec une sécurité supplémentaire</p>
                 </div>
                 <button 
+                  // Active/désactive la 2FA dans l'état local security
                   onClick={() => setSecurity({...security, twoFactor: !security.twoFactor})}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     security.twoFactor ? 'bg-blue-600' : 'bg-gray-600'
@@ -485,6 +497,7 @@ const Dashboard: React.FC = () => {
                 </button>
               </div>
             </div>
+                    */}
 
             {/* Save Button */}
             <div className="pt-4">
