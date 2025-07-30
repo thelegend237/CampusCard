@@ -20,6 +20,24 @@ const Dashboard: React.FC = () => {
     created_at: string;
   };
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  // États pour les paramètres de la carte
+  const [formData, setFormData] = useState({
+    firstname: user?.firstname || '',
+    lastname: user?.lastname || '',
+    program: user?.program || '',
+  });
+  
+  const [notificationSettings, setNotificationSettings] = useState({
+    email: true,
+    sms: true,
+  });
+  
+  const [security, setSecurity] = useState({
+    twoFactor: true,
+  });
+  
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -71,6 +89,99 @@ const Dashboard: React.FC = () => {
     };
     fetchUserData();
   }, [user]);
+
+  // Charger les paramètres sauvegardés au démarrage
+  useEffect(() => {
+    const savedNotificationSettings = localStorage.getItem('notificationSettings');
+    const savedSecuritySettings = localStorage.getItem('securitySettings');
+    
+    if (savedNotificationSettings) {
+      setNotificationSettings(JSON.parse(savedNotificationSettings));
+    }
+    
+    if (savedSecuritySettings) {
+      setSecurity(JSON.parse(savedSecuritySettings));
+    }
+  }, []);
+
+  // Fonctions pour gérer les paramètres
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Fichier trop volumineux (max 2MB)");
+      return;
+    }
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      
+      const { error } = await supabase.storage
+        .from('avatar')
+        .upload(fileName, file);
+        
+      if (error) {
+        alert("Erreur lors de l'upload de la photo");
+        return;
+      }
+      
+      const { data: publicUrlData } = supabase.storage
+        .from('avatar')
+        .getPublicUrl(fileName);
+        
+      // Mettre à jour l'avatar de l'utilisateur
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ avatar: publicUrlData?.publicUrl })
+        .eq('id', user.id);
+        
+      if (updateError) {
+        alert("Erreur lors de la mise à jour de la photo");
+        return;
+      }
+      
+      // Recharger les données utilisateur
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur upload photo:', error);
+      alert("Erreur lors de l'upload de la photo");
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      // Mettre à jour les informations utilisateur
+      const { error } = await supabase
+        .from('users')
+        .update({
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          program: formData.program,
+        })
+        .eq('id', user.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Sauvegarder les paramètres de notifications et sécurité
+      // (Ces paramètres pourraient être stockés dans une table séparée)
+      localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+      localStorage.setItem('securitySettings', JSON.stringify(security));
+      
+      alert('Paramètres sauvegardés avec succès');
+    } catch (error) {
+      console.error('Erreur sauvegarde paramètres:', error);
+      alert('Erreur lors de la sauvegarde des paramètres');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const latestPayment = payments[0];
 
@@ -244,13 +355,23 @@ const Dashboard: React.FC = () => {
                 Photo d'identité
               </label>
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
-                  <span className="text-2xl">👤</span>
+                <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Photo de profil" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl">👤</span>
+                  )}
                 </div>
                 <div>
-                  <button className="text-blue-400 hover:text-blue-300 text-sm">
+                  <label className="text-blue-400 hover:text-blue-300 text-sm cursor-pointer">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
                     Modifier la photo
-                  </button>
+                  </label>
                   <p className="text-xs text-gray-400">JPG ou PNG, max 2MB</p>
                 </div>
               </div>
@@ -264,9 +385,9 @@ const Dashboard: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={user?.firstname || ''}
+                  value={formData.firstname}
+                  onChange={(e) => setFormData({...formData, firstname: e.target.value})}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  readOnly
                   placeholder="Prénom"
                   title="Prénom"
                 />
@@ -277,9 +398,9 @@ const Dashboard: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={user?.lastname || ''}
+                  value={formData.lastname}
+                  onChange={(e) => setFormData({...formData, lastname: e.target.value})}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  readOnly
                   placeholder="Nom"
                   title="Nom"
                 />
@@ -290,10 +411,19 @@ const Dashboard: React.FC = () => {
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Programme d'études
               </label>
-              <select className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent" title="Programme d'études">
-                <option>Master en Informatique</option>
-                <option>Licence en Génie Civil</option>
-                <option>DUT Électronique</option>
+              <select 
+                value={formData.program}
+                onChange={(e) => setFormData({...formData, program: e.target.value})}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                title="Programme d'études"
+              >
+                <option value="">Sélectionner un programme</option>
+                <option value="Master en Informatique">Master en Informatique</option>
+                <option value="Licence en Génie Civil">Licence en Génie Civil</option>
+                <option value="DUT Électronique">DUT Électronique</option>
+                <option value="Licence en Génie Électrique">Licence en Génie Électrique</option>
+                <option value="Master en Génie Civil">Master en Génie Civil</option>
+                <option value="DUT Informatique">DUT Informatique</option>
               </select>
             </div>
 
@@ -303,15 +433,29 @@ const Dashboard: React.FC = () => {
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Notifications par email</span>
-                <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600 transition-colors">
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                <button 
+                  onClick={() => setNotificationSettings({...notificationSettings, email: !notificationSettings.email})}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    notificationSettings.email ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    notificationSettings.email ? 'translate-x-6' : 'translate-x-1'
+                  }`}></span>
                 </button>
               </div>
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-400">Notifications par SMS</span>
-                <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600 transition-colors">
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                <button 
+                  onClick={() => setNotificationSettings({...notificationSettings, sms: !notificationSettings.sms})}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    notificationSettings.sms ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    notificationSettings.sms ? 'translate-x-6' : 'translate-x-1'
+                  }`}></span>
                 </button>
               </div>
             </div>
@@ -325,10 +469,28 @@ const Dashboard: React.FC = () => {
                   <span className="text-sm text-gray-400">Authentification à deux facteurs</span>
                   <p className="text-xs text-gray-500">Protégez votre compte avec une sécurité supplémentaire</p>
                 </div>
-                <button className="relative inline-flex h-6 w-11 items-center rounded-full bg-blue-600 transition-colors">
-                  <span className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform translate-x-6"></span>
+                <button 
+                  onClick={() => setSecurity({...security, twoFactor: !security.twoFactor})}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    security.twoFactor ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    security.twoFactor ? 'translate-x-6' : 'translate-x-1'
+                  }`}></span>
                 </button>
               </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="pt-4">
+              <button
+                onClick={handleSaveSettings}
+                disabled={saving}
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving ? 'Sauvegarde...' : 'Sauvegarder les paramètres'}
+              </button>
             </div>
           </div>
         </div>
