@@ -235,9 +235,9 @@ const CardGeneration: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Form Section */}
-        <div className="bg-gray-800 rounded-2xl p-6">
+        <div className="bg-gray-800 rounded-2xl p-4 sm:p-6">
           {isLoadingStatus ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
@@ -279,6 +279,7 @@ const CardGeneration: React.FC = () => {
                       onChange={handleFileChange}
                       className="hidden"
                       id="avatar-upload"
+                      title="Uploader une photo d'identité"
                     />
                     <label
                       htmlFor="avatar-upload"
@@ -293,7 +294,7 @@ const CardGeneration: React.FC = () => {
                 {!isBackPreview ? (
                   <>
                     {/* Formulaire recto (infos classiques) */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Prénom
@@ -305,6 +306,7 @@ const CardGeneration: React.FC = () => {
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Prénom"
+                      title="Prénom"
                     />
                   </div>
                   <div>
@@ -318,10 +320,11 @@ const CardGeneration: React.FC = () => {
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Nom"
+                      title="Nom"
                         />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">
                           Date de naissance
@@ -333,6 +336,7 @@ const CardGeneration: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="JJ/MM/AAAA"
+                      title="Date de naissance"
                         />
                       </div>
                       <div>
@@ -346,6 +350,7 @@ const CardGeneration: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="Ville, pays..."
+                      title="Lieu de naissance"
                 />
               </div>
             </div>
@@ -360,6 +365,7 @@ const CardGeneration: React.FC = () => {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="2101206"
+                    title="Numéro étudiant"
               />
             </div>
             <div>
@@ -412,6 +418,7 @@ const CardGeneration: React.FC = () => {
                     onChange={e => setFormData(prev => ({ ...prev, versoMessage: e.target.value }))}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Si vous trouvez cette carte, merci de contacter le propriétaire ou l'administration de l'IUT de Douala."
+                    title="Message personnalisé"
                   />
                 </div>
                 <div>
@@ -425,6 +432,7 @@ const CardGeneration: React.FC = () => {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Téléphone ou email"
+                    title="Contact d'urgence"
                   />
                 </div>
               </>

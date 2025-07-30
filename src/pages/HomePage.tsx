@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Mail, ShoppingCart, MapPin, Linkedin, Facebook, Twitter, Phone, Clock} from "lucide-react";
+import { useState, useRef, useEffect } from 'react';
 
 // Ajout du scroll fluide global
 if (typeof window !== 'undefined') {
@@ -11,8 +12,10 @@ if (typeof window !== 'undefined') {
 const glowText = 'drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]';
 
 const HomePage: React.FC = () => {
+  const { user, signOut } = useAuth();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
   const handleGetStarted = () => {
     if (user) {
       if (user.role === 'admin') {
@@ -25,6 +28,18 @@ const HomePage: React.FC = () => {
     }
   };
 
+  // Fermer le menu profil si clic en dehors
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [profileMenuOpen]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-purple-900">
       {/* Header */}
@@ -34,7 +49,7 @@ const HomePage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Link to="/" className="flex items-center space-x-2">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-tr from-blue-500 to-purple-500 shadow-lg">
-                  <img src="/public/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
+                  <img src="/logo-iut.png" alt="Logo IUT" className="w-full h-full object-contain rounded-full" />
               </div>
                 <span className={`text-xl font-bold text-blue-400 ${glowText}`}>CampusCard</span>
             </Link>
@@ -45,13 +60,63 @@ const HomePage: React.FC = () => {
               <a href="#faq" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">❓ FAQ</a>
               <a href="#contact" className="text-blue-400 hover:text-blue-400 transition-colors font-semibold tracking-wide">📞 Contact</a>
             </nav>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 relative">
+              {user ? (
+                <>
+                  <button
+                    onClick={() => setProfileMenuOpen((v) => !v)}
+                    className="bg-gradient-to-tr from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform font-semibold border border-white/20 backdrop-blur-md"
+                    title="Profil utilisateur"
+                  >
+                    {user.firstname || '😀 User'}
+                  </button>
+                  {profileMenuOpen && (
+                    <div
+                      ref={popoverRef}
+                      className="absolute right-0 top-12 z-50 bg-white rounded-xl shadow-xl border border-gray-200 w-56 p-4 flex flex-col items-center"
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mb-2">
+                        <span className="text-xl text-white font-bold">{user.firstname?.[0] || '😀'}</span>
+                      </div>
+                      <div className="text-center mb-2">
+                        <div className="font-semibold text-gray-900">{user.firstname} {user.lastname}</div>
+                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </div>
+                      <Link
+                        to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'}
+                        className="w-full mt-2 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors text-center"
+                        onClick={() => setProfileMenuOpen(false)}
+                      >
+                        Mon dashboard
+                      </Link>
+                      <Link
+                        to="/dashboard/settings"
+                        className="w-full mt-2 bg-gray-200 text-gray-800 py-2 rounded-lg font-medium hover:bg-gray-300 transition-colors text-center"
+                        onClick={() => setProfileMenuOpen(false)}
+                      >
+                        Mon profil
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setProfileMenuOpen(false);
+                          setTimeout(async () => { await signOut(); }, 100);
+                        }}
+                        className="w-full mt-2 bg-red-500 text-white py-2 rounded-lg font-medium hover:bg-red-600 transition-colors"
+                      >
+                        Se déconnecter
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
               <button
                 onClick={() => navigate('/login')}
                 className="bg-gradient-to-tr from-blue-600 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg hover:scale-105 transition-transform font-semibold border border-white/20 backdrop-blur-md"
               >
-              {user?.firstname || '😀 User'}
+                  😀 User
               </button>
+              )}
             </div>
           </div>
         </div>
@@ -159,7 +224,7 @@ const HomePage: React.FC = () => {
           <div className="grid md:grid-cols-5 gap-6">
             <div className={`bg-white/90 backdrop-blur-md border border-blue-100 shadow-lg rounded-3xl p-6 flex flex-col items-center text-center hover:scale-105 transition-transform duration-300`}> 
               <div className="w-12 h-12 mb-4 rounded-full bg-gradient-to-tr from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl shadow-lg">1</div>
-              <span className="font-semibold text-blue-600">Créez votre compte étudiant</span>
+              <span className="font-semibold text-blue-600">Connectez-vous à votre compte étudiant</span>
               <span className="text-gray-700 text-sm mt-2">sur la plateforme CampusCard.</span>
             </div>
             <div className={`bg-white/90 backdrop-blur-md border border-blue-100 shadow-lg rounded-3xl p-6 flex flex-col items-center text-center hover:scale-105 transition-transform duration-300`}> 
@@ -203,7 +268,7 @@ const HomePage: React.FC = () => {
             </div>
             <div className={`bg-white/90 backdrop-blur-md border border-purple-100 shadow-lg rounded-3xl p-8 flex flex-col gap-2 hover:scale-105 transition-transform duration-300`}> 
               <span className="font-semibold text-blue-700 text-lg">Quels documents dois-je fournir ?</span>
-              <span className="text-gray-700">Une photo d'identité récente et vos informations personnelles (nom, prénom, date de naissance, etc.).</span>
+              <span className="text-gray-700">Une photo d'identité récente .</span>
             </div>
             <div className={`bg-white/90 backdrop-blur-md border border-purple-100 shadow-lg rounded-3xl p-8 flex flex-col gap-2 hover:scale-105 transition-transform duration-300`}> 
               <span className="font-semibold text-blue-700 text-lg">Comment récupérer ma carte ?</span>
@@ -252,7 +317,7 @@ const HomePage: React.FC = () => {
       <footer className="bg-gradient-to-tr from-blue-900/95 to-purple-900/95 border-t border-blue-800/40 shadow-2xl mt-2">
         <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center space-x-3">
-            <img src="/public/logo-iut.png" alt="Logo IUT" className="w-12 h-12 object-contain rounded-full shadow-lg border-2 border-blue-400/30" />
+            <img src="/logo-iut.png" alt="Logo IUT" className="w-12 h-12 object-contain rounded-full shadow-lg border-2 border-blue-400/30" />
             <span className="text-2xl font-extrabold text-blue-100 tracking-wide drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">CampusCard</span>
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-4 text-blue-200 text-sm font-medium">

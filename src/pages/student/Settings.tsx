@@ -74,12 +74,13 @@ const Settings: React.FC = () => {
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
+                onClick={() => setActiveTab(tab.id as 'profile' | 'security' | 'notifications')}
                 className={`flex items-center space-x-2 px-6 py-4 font-medium text-sm transition-colors ${
                   activeTab === tab.id
                     ? 'text-blue-600 border-b-2 border-blue-600'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
+                title={tab.label}
               >
                 <tab.icon className="w-5 h-5" />
                 <span>{tab.label}</span>
@@ -97,7 +98,7 @@ const Settings: React.FC = () => {
                   <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center">
                     <User className="w-12 h-12 text-gray-400" />
                   </div>
-                  <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
+                  <button className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors" title="Changer la photo de profil">
                     <Upload className="w-4 h-4" />
                   </button>
                 </div>
@@ -175,6 +176,8 @@ const Settings: React.FC = () => {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     readOnly
+                    placeholder="Numéro étudiant"
+                    title="Numéro étudiant"
                   />
                 </div>
 
@@ -187,6 +190,7 @@ const Settings: React.FC = () => {
                     value={formData.department}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Département"
                   >
                     <option value="">Sélectionnez un département</option>
                     <option value="Informatique & Réseaux">Informatique & Réseaux</option>
@@ -205,6 +209,7 @@ const Settings: React.FC = () => {
                     value={formData.program}
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Programme d'études"
                   >
                     <option value="">Sélectionnez un programme</option>
                     <option value="Master en Informatique">Master en Informatique</option>

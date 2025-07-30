@@ -144,18 +144,152 @@ Les contributions sont les bienvenues ! Merci de créer une issue ou une pull re
 ## Licence
 MIT 
 
-## Déploiement sur Vercel
+## 🚀 Déploiement sur Vercel
 
-Ce projet est prêt pour un déploiement sur [Vercel](https://vercel.com/).
+### Prérequis
+- Compte GitHub/GitLab/Bitbucket
+- Compte Vercel
+- Projet Supabase configuré
 
-### Étapes :
-1. Poussez votre code sur un repository GitHub, GitLab ou Bitbucket.
-2. Connectez-vous sur [vercel.com](https://vercel.com/) et importez votre repository.
-3. Vercel détectera automatiquement Vite et utilisera la commande `npm run build`.
-4. Le dossier de sortie est `dist` (configuré dans `vercel.json`).
-5. Ajoutez vos variables d'environnement (ex : SUPABASE_URL, SUPABASE_ANON_KEY) dans l'onglet "Environment Variables" du dashboard Vercel.
-6. Lancez le déploiement !
+### Étapes de déploiement
 
-Aucune configuration supplémentaire n'est requise pour un projet Vite standard.
+#### 1. Préparation du code
+```bash
+# Vérifier que tout fonctionne localement
+npm run build:check
+npm run build
+```
 
-Pour des besoins avancés (redirections, headers, etc.), modifiez le fichier `vercel.json` à la racine du projet. 
+#### 2. Push sur GitHub
+```bash
+git add .
+git commit -m "Prepare for deployment"
+git push origin main
+```
+
+#### 3. Déploiement sur Vercel
+1. Connectez-vous sur [vercel.com](https://vercel.com/)
+2. Cliquez sur "New Project"
+3. Importez votre repository GitHub
+4. Vercel détectera automatiquement Vite
+
+#### 4. Configuration des variables d'environnement
+Dans le dashboard Vercel, allez dans **Settings > Environment Variables** et ajoutez :
+
+```
+VITE_SUPABASE_URL=https://votre-projet.supabase.co
+VITE_SUPABASE_ANON_KEY=votre_cle_anon_supabase
+```
+
+#### 5. Configuration du build
+- **Framework Preset** : Vite
+- **Build Command** : `npm run build`
+- **Output Directory** : `dist`
+- **Install Command** : `npm install`
+
+#### 6. Déploiement
+Cliquez sur "Deploy" et attendez la fin du build.
+
+### Configuration post-déploiement
+
+#### Créer un compte admin
+1. Allez dans votre projet Supabase
+2. **Authentication > Users > Add user**
+3. Créez un utilisateur admin :
+   - Email : `admin@votre-domaine.com`
+   - Password : `MotDePasseSecurise123!`
+   - ✅ Email confirmed
+
+4. Dans **SQL Editor**, exécutez :
+```sql
+INSERT INTO users (
+  id, 
+  email, 
+  role, 
+  firstname, 
+  lastname, 
+  created_at
+) VALUES (
+  'UUID_DE_L_UTILISATEUR_AUTH', -- Remplacez par l'ID de l'utilisateur créé
+  'admin@votre-domaine.com',
+  'admin',
+  'Admin',
+  'Principal',
+  NOW()
+);
+```
+
+#### Accès admin
+- URL : `https://votre-domaine.vercel.app/admin/login`
+- Email : `admin@votre-domaine.com`
+- Mot de passe : `MotDePasseSecurise123!`
+
+### URLs importantes
+- **Frontend étudiant** : `https://votre-domaine.vercel.app/`
+- **Admin** : `https://votre-domaine.vercel.app/admin/dashboard`
+- **Connexion admin** : `https://votre-domaine.vercel.app/admin/login`
+
+### Dépannage
+
+#### Erreur de build
+- Vérifiez que toutes les variables d'environnement sont configurées
+- Vérifiez que le projet Supabase est actif
+- Consultez les logs de build dans Vercel
+
+#### Erreur 404 sur les routes
+- Le fichier `vercel.json` est configuré pour rediriger toutes les routes vers `index.html`
+- Vérifiez que le fichier est bien présent à la racine
+
+#### Problème d'authentification
+- Vérifiez que les clés Supabase sont correctes
+- Vérifiez que les policies RLS sont appliquées
+- Vérifiez que le compte admin a le bon rôle
+
+## Fonctionnement du menu profil utilisateur
+
+Le header de l'application propose une expérience moderne et cohérente pour la gestion du profil utilisateur, aussi bien sur desktop que sur mobile :
+
+- **Icône profil visible en haut à droite** (avec ou sans nom selon la taille d'écran)
+- **Un clic sur l'icône ouvre un menu popover** affichant :
+  - Les informations utilisateur (nom, email)
+  - Un lien vers le dashboard ("Mon dashboard")
+  - Un lien vers la page de profil ("Mon profil")
+  - Un bouton de déconnexion
+- **Le menu se ferme** automatiquement si l'utilisateur clique en dehors ou sélectionne une action.
+- **Navigation fluide** grâce à React Router (`<Link>`) pour les liens internes, et déconnexion via le contexte d'authentification.
+
+Ce comportement est identique sur desktop et mobile pour une UX optimale. 
+
+## Problèmes rencontrés et solutions
+
+### 1. Problème de responsive sur mobile
+- **Symptôme :** Certains composants (sidebar, dashboard, header) débordaient ou n'étaient pas lisibles sur mobile.
+- **Solution :** Utilisation systématique des classes Tailwind responsives (`w-full`, `max-w-full`, `overflow-x-hidden`, grilles adaptatives, paddings adaptés). Sidebar transformé en drawer sur mobile avec bouton hamburger.
+
+### 2. Sidebar visible sur mobile
+- **Symptôme :** Le menu latéral restait affiché sur mobile, masquant le contenu.
+- **Solution :** Ajout d'une prop `mobile` au composant Sidebar pour le rendre visible uniquement dans un drawer mobile, avec gestion de l'ouverture/fermeture via un bouton hamburger dans le header.
+
+### 3. Navigation cassée dans le menu profil (HomePage)
+- **Symptôme :** Les liens "Mon dashboard", "Mon profil" et le bouton de déconnexion ne fonctionnaient pas dans le popover.
+- **Solution :** Utilisation de `<Link>` pour la navigation interne, gestion du popover avec un ref pour détecter les clics en dehors, et appel du contexte d'auth pour la déconnexion.
+
+### 4. 404 sur les routes profondes en production (Vercel)
+- **Symptôme :** Accès direct à une URL comme `/student/card-view` renvoyait une erreur 404 sur Vercel.
+- **Solution :** Ajout d'une règle de rewrite dans `vercel.json` pour rediriger toutes les routes vers `index.html` (SPA fallback).
+
+### 5. Header non responsive et peu lisible sur mobile
+- **Symptôme :** Le header passait en colonne ou les éléments se superposaient sur mobile.
+- **Solution :** Refactorisation du header pour garder tous les éléments sur une seule ligne, logo à gauche, actions à droite, barre de recherche masquée sur mobile.
+
+### 6. Menu profil incohérent entre desktop et mobile
+- **Symptôme :** Le menu profil n'avait pas le même comportement sur desktop et mobile.
+- **Solution :** Unification du comportement : clic sur l'icône profil ouvre un popover avec infos, navigation et déconnexion sur toutes les tailles d'écran.
+
+### 7. Problèmes de fermeture du menu profil
+- **Symptôme :** Le menu se fermait avant la navigation ou la déconnexion, ou restait ouvert.
+- **Solution :** Utilisation d'un ref et d'un gestionnaire d'événement global pour fermer le menu uniquement en cas de clic en dehors ou après une action.
+
+---
+
+Cette section permet de garder une trace des principaux bugs rencontrés lors du développement et des solutions apportées, pour faciliter la maintenance et l'évolution du projet. 

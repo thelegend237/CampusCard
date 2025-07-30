@@ -68,7 +68,7 @@ function App() {
               <Route path="history" element={<History />} />
               <Route path="settings" element={<Settings />} />
               <Route path="support" element={<Support />} />
-              <Route path="student/card-view" element={<StudentCardView />} />
+              
             </Route>
 
             {/* Admin Routes protégées par AdminRoute */}
