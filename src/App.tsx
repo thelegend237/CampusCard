@@ -18,7 +18,10 @@ import AdminDepartments from '../admin/src/pages/AdminDepartments';
 import AdminReports from '../admin/src/pages/AdminReports';
 import AdminSettings from '../admin/src/pages/AdminSettings';
 import AdminLayout from '../admin/src/components/AdminLayout';
-import AdminRoute from '../admin/src/components/AdminRoute';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminTestPage from './pages/AdminTestPage';
+import SimpleAdminTest from './pages/SimpleAdminTest';
+import AdminRoute from './components/AdminRoute';
 import StudentCardView from './pages/student/StudentCardView';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; requireAdmin?: boolean }> = ({ 
@@ -55,6 +58,13 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/student/card-view" element={<StudentCardView />} />
+            
+            {/* Page de connexion admin */}
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            
+            {/* Pages de test admin */}
+            <Route path="/admin/test" element={<AdminTestPage />} />
+            <Route path="/admin/simple-test" element={<SimpleAdminTest />} />
             
             {/* Student Routes */}
             <Route path="/dashboard" element={
