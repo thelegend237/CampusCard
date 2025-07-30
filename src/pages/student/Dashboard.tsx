@@ -301,6 +301,7 @@ const Dashboard: React.FC = () => {
               >
                 Historique
               </button>
+              {/* 
               <button
                 className="bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-800 transition-colors"
                 onClick={() => window.location.href = '/student/card-view?mode=pdf'}
@@ -308,6 +309,7 @@ const Dashboard: React.FC = () => {
               >
                 Aperçu PDF
               </button>
+              */}
             </div>
           </div>
 
@@ -330,12 +332,14 @@ const Dashboard: React.FC = () => {
               >
                 Télécharger en PDF
               </button>
+              {/*
               <button
                 onClick={() => window.location.href = '/student/card-view'}
                 className="w-full mt-3 bg-gray-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-800 transition-colors"
               >
                 Voir la carte en détail (recto/verso)
               </button>
+              */}
             </div>
           ) : (
             <div className="bg-gray-700 rounded-xl p-6 text-white text-center">
